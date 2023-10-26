@@ -1,0 +1,55 @@
+greedy_sun : 
+#constrains : 8
+time : 0s
+
+
+greedy_sun : 
+#constrains : 8
+time : 0s
+
+
+greedy_sun : 
+#constrains : 8
+time : 0s
+
+
+greedy_sun : 
+#constrains : 8
+time : 0s
+
+
+greedy_sun : 
+#constrains : 8
+time : 0s
+
+
+greedy_sun : 
+#constrains : 8
+time : 0s
+
+
+greedy_sun : 
+#constrains : 8
+time : 0s
+
+
+greedy_sun : 
+#constrains : 8
+time : 0s
+
+
+greedy_sun : 
+#constrains : 8
+time : 0s
+
+
+greedy_sun : 
+#constrains : 8
+time : 0s
+
+
+greedy_sun : 
+#constrains : 13
+time : 0s
+
+

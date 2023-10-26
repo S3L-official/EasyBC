@@ -348,6 +348,8 @@ int EasyBCInter::andEnc(ThreeAddressNodePtr left, ThreeAddressNodePtr right, Thr
             this->rndTanNameMVal[left->getNodeName()] = symbolIndexEnc(left->getLhs(), left->getRhs(), left);
         } else if (left->getOp() == ASTNode::NOT) {
             this->rndTanNameMVal[left->getNodeName()] = notEnc(left->getLhs(), left);
+        } else if (left->getOp() == ASTNode::NULLOP) {
+            this->rndTanNameMVal[left->getNodeName()] = stoi(left->getNodeName());
         } else
             assert(false);
     }
@@ -356,6 +358,8 @@ int EasyBCInter::andEnc(ThreeAddressNodePtr left, ThreeAddressNodePtr right, Thr
             this->rndTanNameMVal[right->getNodeName()] = symbolIndexEnc(right->getLhs(), right->getRhs(), right);
         } else if (right->getOp() == ASTNode::NOT) {
             this->rndTanNameMVal[right->getNodeName()] = notEnc(right->getLhs(), right);
+        } else if (right->getOp() == ASTNode::NULLOP) {
+            this->rndTanNameMVal[right->getNodeName()] = stoi(right->getNodeName());
         } else
             assert(false);
     }
@@ -368,12 +372,20 @@ int EasyBCInter::orEnc(ThreeAddressNodePtr left, ThreeAddressNodePtr right, Thre
     if (this->rndTanNameMVal.find(left->getNodeName()) == this->rndTanNameMVal.end()) {
         if (left->getOp() == ASTNode::SYMBOLINDEX) {
             this->rndTanNameMVal[left->getNodeName()] = symbolIndexEnc(left->getLhs(), left->getRhs(), left);
+        } else if (left->getOp() == ASTNode::NOT) {
+            this->rndTanNameMVal[left->getNodeName()] = notEnc(left->getLhs(), left);
+        } else if (left->getOp() == ASTNode::NULLOP) {
+            this->rndTanNameMVal[left->getNodeName()] = stoi(left->getNodeName());
         } else
             assert(false);
     }
     if (this->rndTanNameMVal.find(right->getNodeName()) == this->rndTanNameMVal.end()) {
         if (right->getOp() == ASTNode::SYMBOLINDEX) {
             this->rndTanNameMVal[right->getNodeName()] = symbolIndexEnc(right->getLhs(), right->getRhs(), right);
+        } else if (right->getOp() == ASTNode::NOT) {
+            this->rndTanNameMVal[right->getNodeName()] = notEnc(right->getLhs(), right);
+        } else if (right->getOp() == ASTNode::NULLOP) {
+            this->rndTanNameMVal[right->getNodeName()] = stoi(right->getNodeName());
         } else
             assert(false);
     }

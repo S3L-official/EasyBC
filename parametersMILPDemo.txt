@@ -1,0 +1,11 @@
+10
+../benchmarks/BlockCipher/SKINNY_64tn.cl
+b
+cryptanalysis
+1
+startRound
+1
+endRound
+10
+totalRoundNum
+32

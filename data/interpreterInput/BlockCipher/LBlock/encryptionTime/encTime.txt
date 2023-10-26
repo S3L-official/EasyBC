@@ -1,0 +1,402 @@
+ ============== test case 0  ============== 
+clock time : 0.001925s
+time time : 0s
+
+ ============== test case 1  ============== 
+clock time : 0.001905s
+time time : 0s
+
+ ============== test case 2  ============== 
+clock time : 0.001874s
+time time : 0s
+
+ ============== test case 3  ============== 
+clock time : 0.001861s
+time time : 0s
+
+ ============== test case 4  ============== 
+clock time : 0.001856s
+time time : 0s
+
+ ============== test case 5  ============== 
+clock time : 0.001852s
+time time : 0s
+
+ ============== test case 6  ============== 
+clock time : 0.001889s
+time time : 0s
+
+ ============== test case 7  ============== 
+clock time : 0.001851s
+time time : 0s
+
+ ============== test case 8  ============== 
+clock time : 0.001838s
+time time : 0s
+
+ ============== test case 9  ============== 
+clock time : 0.001849s
+time time : 0s
+
+ ============== test case 10  ============== 
+clock time : 0.001871s
+time time : 0s
+
+ ============== test case 11  ============== 
+clock time : 0.001858s
+time time : 0s
+
+ ============== test case 12  ============== 
+clock time : 0.001875s
+time time : 0s
+
+ ============== test case 13  ============== 
+clock time : 0.001858s
+time time : 0s
+
+ ============== test case 14  ============== 
+clock time : 2e-06s
+time time : 0s
+
+ ============== test case 15  ============== 
+clock time : 0.001862s
+time time : 0s
+
+ ============== test case 16  ============== 
+clock time : 0.001912s
+time time : 0s
+
+ ============== test case 17  ============== 
+clock time : 0.001933s
+time time : 0s
+
+ ============== test case 18  ============== 
+clock time : 0.003254s
+time time : 0s
+
+ ============== test case 19  ============== 
+clock time : 0.003573s
+time time : 0s
+
+ ============== test case 20  ============== 
+clock time : 0.001907s
+time time : 0s
+
+ ============== test case 21  ============== 
+clock time : 0.001875s
+time time : 0s
+
+ ============== test case 22  ============== 
+clock time : 0.001879s
+time time : 0s
+
+ ============== test case 23  ============== 
+clock time : 0.001849s
+time time : 0s
+
+ ============== test case 24  ============== 
+clock time : 0.001835s
+time time : 0s
+
+ ============== test case 25  ============== 
+clock time : 0.001824s
+time time : 0s
+
+ ============== test case 26  ============== 
+clock time : 0.00184s
+time time : 0s
+
+ ============== test case 27  ============== 
+clock time : 0.001849s
+time time : 0s
+
+ ============== test case 28  ============== 
+clock time : 0.00187s
+time time : 0s
+
+ ============== test case 29  ============== 
+clock time : 0.001882s
+time time : 0s
+
+ ============== test case 30  ============== 
+clock time : 0.001845s
+time time : 0s
+
+ ============== test case 31  ============== 
+clock time : 0.001789s
+time time : 0s
+
+ ============== test case 32  ============== 
+clock time : 0.001822s
+time time : 0s
+
+ ============== test case 33  ============== 
+clock time : 0.001849s
+time time : 0s
+
+ ============== test case 34  ============== 
+clock time : 0.001854s
+time time : 0s
+
+ ============== test case 35  ============== 
+clock time : 0.001834s
+time time : 0s
+
+ ============== test case 36  ============== 
+clock time : 0.001829s
+time time : 0s
+
+ ============== test case 37  ============== 
+clock time : 0.001849s
+time time : 0s
+
+ ============== test case 38  ============== 
+clock time : 0.001818s
+time time : 0s
+
+ ============== test case 39  ============== 
+clock time : 0.001871s
+time time : 0s
+
+ ============== test case 40  ============== 
+clock time : 0.001882s
+time time : 0s
+
+ ============== test case 41  ============== 
+clock time : 0.001845s
+time time : 0s
+
+ ============== test case 42  ============== 
+clock time : 0.001877s
+time time : 0s
+
+ ============== test case 43  ============== 
+clock time : 0.002431s
+time time : 1s
+
+ ============== test case 44  ============== 
+clock time : 0.003556s
+time time : 0s
+
+ ============== test case 45  ============== 
+clock time : 0.003512s
+time time : 0s
+
+ ============== test case 46  ============== 
+clock time : 0.003953s
+time time : 0s
+
+ ============== test case 47  ============== 
+clock time : 0.003887s
+time time : 0s
+
+ ============== test case 48  ============== 
+clock time : 0.003791s
+time time : 0s
+
+ ============== test case 49  ============== 
+clock time : 0.003939s
+time time : 0s
+
+ ============== test case 50  ============== 
+clock time : 0.003921s
+time time : 0s
+
+ ============== test case 51  ============== 
+clock time : 0.003919s
+time time : 0s
+
+ ============== test case 52  ============== 
+clock time : 0.003785s
+time time : 0s
+
+ ============== test case 53  ============== 
+clock time : 0.003655s
+time time : 0s
+
+ ============== test case 54  ============== 
+clock time : 0.003905s
+time time : 0s
+
+ ============== test case 55  ============== 
+clock time : 0.00391s
+time time : 0s
+
+ ============== test case 56  ============== 
+clock time : 0.003829s
+time time : 0s
+
+ ============== test case 57  ============== 
+clock time : 0.003888s
+time time : 0s
+
+ ============== test case 58  ============== 
+clock time : 0.003894s
+time time : 0s
+
+ ============== test case 59  ============== 
+clock time : 0.00394s
+time time : 0s
+
+ ============== test case 60  ============== 
+clock time : 0.003891s
+time time : 0s
+
+ ============== test case 61  ============== 
+clock time : 0.003839s
+time time : 0s
+
+ ============== test case 62  ============== 
+clock time : 0.00379s
+time time : 0s
+
+ ============== test case 63  ============== 
+clock time : 0.003675s
+time time : 0s
+
+ ============== test case 64  ============== 
+clock time : 0.003948s
+time time : 0s
+
+ ============== test case 65  ============== 
+clock time : 0.003918s
+time time : 0s
+
+ ============== test case 66  ============== 
+clock time : 0.00396s
+time time : 0s
+
+ ============== test case 67  ============== 
+clock time : 0.003765s
+time time : 0s
+
+ ============== test case 68  ============== 
+clock time : 0.003602s
+time time : 0s
+
+ ============== test case 69  ============== 
+clock time : 0.003581s
+time time : 0s
+
+ ============== test case 70  ============== 
+clock time : 0.001802s
+time time : 0s
+
+ ============== test case 71  ============== 
+clock time : 0.001795s
+time time : 0s
+
+ ============== test case 72  ============== 
+clock time : 0.001805s
+time time : 0s
+
+ ============== test case 73  ============== 
+clock time : 0.001807s
+time time : 0s
+
+ ============== test case 74  ============== 
+clock time : 0.001838s
+time time : 0s
+
+ ============== test case 75  ============== 
+clock time : 0.001831s
+time time : 0s
+
+ ============== test case 76  ============== 
+clock time : 0.001847s
+time time : 0s
+
+ ============== test case 77  ============== 
+clock time : 0.001837s
+time time : 0s
+
+ ============== test case 78  ============== 
+clock time : 0.001851s
+time time : 0s
+
+ ============== test case 79  ============== 
+clock time : 0.001861s
+time time : 0s
+
+ ============== test case 80  ============== 
+clock time : 0.003104s
+time time : 0s
+
+ ============== test case 81  ============== 
+clock time : 0.003921s
+time time : 0s
+
+ ============== test case 82  ============== 
+clock time : 0.003953s
+time time : 0s
+
+ ============== test case 83  ============== 
+clock time : 0.003935s
+time time : 0s
+
+ ============== test case 84  ============== 
+clock time : 0.003925s
+time time : 0s
+
+ ============== test case 85  ============== 
+clock time : 0.003929s
+time time : 0s
+
+ ============== test case 86  ============== 
+clock time : 0.003934s
+time time : 0s
+
+ ============== test case 87  ============== 
+clock time : 0.003957s
+time time : 0s
+
+ ============== test case 88  ============== 
+clock time : 0.003951s
+time time : 0s
+
+ ============== test case 89  ============== 
+clock time : 0.003839s
+time time : 0s
+
+ ============== test case 90  ============== 
+clock time : 0.003721s
+time time : 0s
+
+ ============== test case 91  ============== 
+clock time : 0.003546s
+time time : 0s
+
+ ============== test case 92  ============== 
+clock time : 0.00235s
+time time : 0s
+
+ ============== test case 93  ============== 
+clock time : 0.001848s
+time time : 0s
+
+ ============== test case 94  ============== 
+clock time : 0.001864s
+time time : 0s
+
+ ============== test case 95  ============== 
+clock time : 0.001847s
+time time : 0s
+
+ ============== test case 96  ============== 
+clock time : 0.001879s
+time time : 0s
+
+ ============== test case 97  ============== 
+clock time : 0.001823s
+time time : 0s
+
+ ============== test case 98  ============== 
+clock time : 0.001828s
+time time : 0s
+
+ ============== test case 99  ============== 
+clock time : 0.001833s
+time time : 0s
+
+average clock time : 0.00262217s
+average time time : 0.01s

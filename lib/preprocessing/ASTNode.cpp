@@ -375,6 +375,12 @@ ValuePtr ASTNode::NBinaryOperator::compute(Interpreter &interpreter) {
             return std::make_shared<ConcreteNumValue>("", lvalue / rvalue);
         } else if(this->getOp() == ASTNode::Operator::MOD){
             return std::make_shared<ConcreteNumValue>("", lvalue % rvalue);
+        } else if(this->getOp() == ASTNode::Operator::XOR){
+            return std::make_shared<ConcreteNumValue>("", lvalue ^ rvalue);
+        } else if(this->getOp() == ASTNode::Operator::AND){
+            return std::make_shared<ConcreteNumValue>("", lvalue & rvalue);
+        } else if(this->getOp() == ASTNode::Operator::OR){
+            return std::make_shared<ConcreteNumValue>("", lvalue | rvalue);
         } else {
             assert(false);
         }
@@ -597,7 +603,8 @@ ValuePtr ASTNode::NAssignment::compute(Interpreter &interpreter) {
         ArrayValue* arrayValueR = dynamic_cast<ArrayValue*>(expValue.get());
         ConcreteNumValue* expConcrete = dynamic_cast<ConcreteNumValue*>(expValue.get());
         // 赋值语句时，如果左右两个都为数组，或者右边为具体值，则类型正确，否则类型错误
-        if ((arrayValueL == nullptr and arrayValueR == nullptr) and (expConcrete == nullptr)) {
+        if (((arrayValueL == nullptr and arrayValueR == nullptr) and (expConcrete == nullptr)) and expValue->getValueType() != VTInternalBinValue and
+                !(this->LHS->getTypeName() == "NIdentifier" and this->RHS->getTypeName() == "NBinaryOperator")) {
             std::cout << "LHS type : " << interpreter.getFromEnv(this->LHS->getName())->getVarType() << std::endl;
             std::cout << "exp type : " << expValue->getVarType() << std::endl;
             std::cout << "TYPE ERROR : The assignment object is not of the same type as the assigned object"
