@@ -17,18 +17,11 @@ INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/include/util)
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/data)
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/z3/include)
 
-
 INCLUDE_DIRECTORIES(/usr/include/)
 LINK_DIRECTORIES(/usr/lib)
 
-# 10700
-#INCLUDE_DIRECTORIES(/home/sunpu/tools/gurobi1001/linux64/include)
-#LINK_DIRECTORIES(/home/sunpu/tools/gurobi1001/linux64/lib)
-# s3lab
-INCLUDE_DIRECTORIES(/home/pusun/gurobi1002/gurobi1002/linux64/include)
-LINK_DIRECTORIES(/home/pusun/gurobi1002/gurobi1002/linux64/lib)
-
-#add_subdirectory(lib)
+INCLUDE_DIRECTORIES(YourGurobiPath)
+LINK_DIRECTORIES(YourGurobiPath)
 
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -fopenmp")
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g2 -gdwarf-2")
@@ -82,27 +75,17 @@ ADD_EXECUTABLE(EasyBC
         lib/differential/DiffSWMILP.cpp
         lib/differential/DiffMILPcons.cpp )
 
-
-#find_library(gurobi_static NAMES libgurobi_g++5.2.a
-#        PATHS /home/sunpu/tools/gurobi1001/linux64/lib)
-#
-#find_library(gurobi_dynamic NAMES libgurobi100.so
-#        PATHS /home/sunpu/tools/gurobi1001/linux64/lib)
-
 find_library(gurobi_static NAMES libgurobi_g++5.2.a
-        PATHS /home/pusun/gurobi1002/gurobi1002/linux64/lib)
+        PATHS YourGurobiLib)
 
 find_library(gurobi_dynamic NAMES libgurobi100.so
-        PATHS /home/pusun/gurobi1002/gurobi1002/linux64/lib)
-
-
+        PATHS YourGurobiLib)
 
 if(NOT gurobi_static)
     message(FATAL_ERROR "Failed to find Gurobi lib")
 endif()
 message(${gurobi_static})
 message(${gurobi_dynamic})
-
 
 TARGET_LINK_LIBRARIES(EasyBC ${FLEX_LIBRARIES} jsoncpp)
 TARGET_LINK_LIBRARIES(EasyBC ${gurobi_static} ${gurobi_dynamic} ${PROJECT_SOURCE_DIR}/z3/bin/libz3.so)
