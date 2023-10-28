@@ -1,5 +1,0 @@
-greedy_sun : 
-#constrains : 41
-time : 5s
-
-
