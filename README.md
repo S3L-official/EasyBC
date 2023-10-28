@@ -10,11 +10,12 @@ This repository is for parsing the input **[EasyDC]** programs of block ciphers 
 ### Preparatory Environment:
 [flex](https://github.com/westes/flex), [bison](https://www.gnu.org/software/bison/), [jsoncpp](https://github.com/open-source-parsers/jsoncpp), [Gurobi](https://www.gurobi.com/solutions/gurobi-optimizer/) and [Z3](https://github.com/Z3Prover/z3)
 ### Building
-    ```
+You should first prepare the preparatory environment, then set up your Gurobi environment in the 'CMakeLists.txt' file, and then run the following command to build the project:
+```
     mkdir build
     cmake CMakeList.txt -B build
     cd build; make
-    ```
+```
 ### Usage
 You can get the help information by executing:
 ```
