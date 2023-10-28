@@ -121,23 +121,6 @@ void paramProcess(std::string mode, std::string cipherName) {
 }
 
 void SboxModelingMGR(std::vector<std::string> params) {
-    /*
-     * argv[1] -> sboxName;
-     * argv[2] -> sbox;    e.g.   "1,2,3,4,5,6,7,8,9,...,16"
-     * argv[3] -> modeling mode;
-     *            mode = "AS" -> modeling differential propagation
-     *            mode = "DC" -> modeling differential propagation with probability
-     * argv[4] -> reduction methods;
-     *            Note : here we only recommend the value of redMd takes 1 to 6;
-     *            redMd = 1 -> greedy algorithm
-     *            redMd = 2 -> sub_milp
-     *            redMd = 3 -> convex_hull_tech
-     *            redMd = 4 -> logic_cond
-     *            redMd = 5 -> comb233
-     *            redMd = 6 -> superball
-     *            redMd = 7 -> read inequalities from external used to extract the results of method of Udovenko (Hellman) or CNF
-     *            redMd = 8 -> read inequalities from external used to extract the results of method of Udovenko (Hellman) or CNF
-     * */
     std::string sboxName = params[0];
     std::vector<string> sboxStr = utilities::split(params[1], ",");
     std::vector<int> sbox;
@@ -185,14 +168,11 @@ void MILPMGR(std::vector<std::string> params) {
     interpreter.generateCode(*programRoot);
     res = interpreter.getProcs();
 
-    // std::cout << "ASTNodeCounter : " << ASTNodeCounter << std::endl;
 
     Transformer transformer(res);
     transformer.transformProcedures();
 
-    // extract optional parameters
     int startRound = 1, endRound = 10, timer = 3600 * 24, threadsNum = 16, totalRoundNum = 0;
-    // 对于有一些key less permutation，其安全性分析并非就是permutation本身的明文size，所以可能需要特别的给定evaluationSize
     int evaluationSize = 0;
     for (int i = 5; i < std::stoi(params[0]); i = i + 2) {
         if (params[i] == "startRound") {
@@ -229,8 +209,6 @@ void MILPMGR(std::vector<std::string> params) {
         sw.setStartRound(startRound);
         sw.setEndRound(endRound);
         if (params[3] == "cryptanalysis") {
-            //sw.setSpeedUp1();
-            //sw.setSpeedUp2();
             sw.setILP();
         }
         if (evaluationSize != 0)
@@ -248,10 +226,6 @@ void MILPMGR(std::vector<std::string> params) {
         if (params[3] == "cryptanalysis") {
             sb.setSpeedUp1();
             sb.setSpeedUp2();
-            // rectangle 的ILP和MILP进行evaluation时结果可能不一样,
-            // 因此为了和cryptanalysis的结果一致，必须用ILP的变量取值范围
-            // 实际上在转换为可满足行问题以后，已经不能称之为ILP或者MILP
-            // 正确的说法是，对于可满足性问题，其变量的取值会影响是否满足的结果
             sb.setILP();
         }
         if (evaluationSize != 0)
@@ -265,10 +239,6 @@ void MILPMGR(std::vector<std::string> params) {
 }
 
 void EasyBCInterpreter(std::vector<std::string> params) {
-    /*
-     * 本函数用于测试interpreter应用于所有benchmark的加密。
-     * 输入只接收一个cipherName，然后根据预设的数据地址来应用所有的加密原料进行加密。
-     * */
     int testNum = 100;
     std::string type = params[0]; // blockCipher or NIST
     std::string cipherName = params[1];
@@ -286,8 +256,6 @@ void EasyBCInterpreter(std::vector<std::string> params) {
             std::string whiteSpaces = " \n\r\t\f\v";
             std::vector<std::string> caseParams;
             while (getline(file, line)) {
-                // trim and save parameters
-                // std::cout << "param line : " << line << std::endl;
                 size_t first_non_space = line.find_first_not_of(whiteSpaces);
                 line.erase(0, first_non_space);
                 size_t last_non_space = line.find_last_not_of(whiteSpaces);
@@ -301,7 +269,6 @@ void EasyBCInterpreter(std::vector<std::string> params) {
         }
     }
 
-    // 输出所有的加密时间和平均加密时间
     std::string encTimePath = path + "encryptionTime/";
     system(("mkdir -p " + encTimePath).c_str());
     encTimePath += "encTime.txt";
@@ -348,13 +315,9 @@ std::vector<double> EasyBCInterpreterDebug(std::vector<std::string> params) {
         assert(false);
     }
 
-    // std::cout << programRoot->jsonGen() << std::endl;
-
     interpreter.generateCode(*programRoot);
     res = interpreter.getProcs();
 
-    // 在compute结束以后，我们需要找到所有的常数数组放在allBox中，后续在evaluate时需要用到
-    // 因为所有的常量数组都在blockStack的第一个元素的env中，所以我们只遍历第一个即可
     for (auto array : interpreter.getblockStack()[0]->env) {
         if (array.second->getValueType() == VTArrayValue) {
             ArrayValue *arrayV = dynamic_cast<ArrayValue *>(array.second.get());
@@ -366,8 +329,6 @@ std::vector<double> EasyBCInterpreterDebug(std::vector<std::string> params) {
             allBox[array.first] = arrayEle;
         }
     }
-
-    // std::cout << "ASTNodeCounter : " << ASTNodeCounter << std::endl;
 
     Transformer transformer(res);
     transformer.transformProcedures();
@@ -401,7 +362,6 @@ std::vector<double> EasyBCInterpreterDebug(std::vector<std::string> params) {
         subKeys.push_back(subkeyBit);
     }
 
-    // 需要获取初始给定的ciphertext，然后根据加密加过来进行判断
     std::vector<int> ciphertext;
     std::string ciphertextStr = params[params.size()-1];
     for (auto c : ciphertextStr) {
@@ -436,14 +396,5 @@ std::vector<double> EasyBCInterpreterDebug(std::vector<std::string> params) {
     std::vector<double> encryptTime;
     encryptTime.push_back(clockTime);
     encryptTime.push_back(timeTime);
-
-    /*for (int i = 0; i < ciphertext.size(); ++i) {
-        if (ciphertext[i] != encryptResult[i]) {
-            std::cout << "The encryption process has something wrong !" << std::endl;
-            assert(false);
-        }
-    }
-    std::cout << "the encryption is correct !" << std::endl;*/
-
     return encryptTime;
 }
