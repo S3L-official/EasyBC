@@ -13,7 +13,6 @@ ProcedureHPtr Transformer::transform(ProcValuePtr procValuePtr) {
     map<ValuePtr, ThreeAddressNodePtr> saved;
     map<string, int> nameCount;
 
-    // 进行参数的转换
     for(auto ele : procValuePtr->getParameters()) {
         if(ArrayValuePtr arrayValuePtr = dynamic_pointer_cast<ArrayValue>(ele)) {
             vector<ThreeAddressNodePtr> paras;
@@ -33,8 +32,6 @@ ProcedureHPtr Transformer::transform(ProcValuePtr procValuePtr) {
         }
     }
 
-    // 进行block的转换
-    // 根据sequence中不同的value类型，而选择对应的transform函数
     for (int k = 0; k < procValuePtr->getProcedurePtr()->getBlock().size(); ++k) {
         ValuePtr ele = procValuePtr->getProcedurePtr()->getBlock().at(k);
         if (InternalBinValuePtr internalBinValuePtr = dynamic_pointer_cast<InternalBinValue>(ele)) {
@@ -52,13 +49,10 @@ ProcedureHPtr Transformer::transform(ProcValuePtr procValuePtr) {
         }
         else if (ProcCallValueIndexPtr procCallValueIndexPtr = dynamic_pointer_cast<ProcCallValueIndex>(ele)) {
             ProcCallValuePtr procCallValuePtr = dynamic_pointer_cast<ProcCallValue>(procCallValueIndexPtr->getProcCallValuePtr());
-            // 这里是处理实参，所以实参的类型应该和对应的 ASTNode 一样，即 uint 或者 uints
             for(int i = 0; i < procCallValuePtr->getArguments().size(); i++) {
                 auto ele = procCallValuePtr->getArguments()[i];
                 if(ArrayValuePtr eleArrayValuePtr = dynamic_pointer_cast<ArrayValue>(ele)) {
                     for(auto item : eleArrayValuePtr->getArrayValue()) {
-                        // 如果被调用的对象是轮函数，则需要对每个参数的名字标记处理
-                        // sbox function 和 kschd function 的接收参数都只有数组，因此只在数组这种情况下进行区分
                         std::string name = "push";
                         if (procCallValuePtr->getProcedurePtr()->getIsRndf()) {
                             if (i == 1)
@@ -102,9 +96,6 @@ ProcedureHPtr Transformer::transform(ProcValuePtr procValuePtr) {
                     auto tempRes = make_shared<ThreeAddressNode>(to_string(concreteNumValue->getNumer()), nullptr, nullptr,
                                                                  ASTNode::Operator::NULLOP, getNodeType(ele->getVarType()));
                     saved[ele] = tempRes;
-                    // 这里因为不是arrayvalue，所以在处理参数时，并没有用到push操作，
-                    // 但是后续进行inline时，是根据push操作来识别参数的
-                    // 所以这里增加一层，改为在res中存储新增的带有push操作的threeAddressNodePtr，而非tempRes
                     ThreeAddressNodePtr threeAddressNodePtr(new ThreeAddressNode
                                                                     ("push", saved[ele], nullptr, ASTNode::Operator::PUSH,
                                                                      getNodeType(ele->getVarType())));
@@ -127,7 +118,6 @@ ProcedureHPtr Transformer::transform(ProcValuePtr procValuePtr) {
             } else {
                 func = saved[procCallValueIndexPtr->getProcCallValuePtr()];
             }
-            // function call 有三种情况：roundFunction， sboxFunction 和 kschdFunction
             if (procCallValuePtr->getProcedurePtr()->getIsRndf() or procCallValuePtr->getProcedurePtr()->getIsSboxf() or procCallValuePtr->getProcedurePtr()->getIsKschd()) {
                 while (true) {
                     name = procCallValueIndexPtr->getName();
@@ -160,14 +150,11 @@ ProcedureHPtr Transformer::transform(ProcValuePtr procValuePtr) {
         else if (!ele) {
             continue;
         }
-        // 暂时没有覆盖到的value类型的转换
         else {
             assert(false);
         }
     }
 
-
-    // 进行return的转换
     if(ArrayValuePtr arrayValuePtr = dynamic_pointer_cast<ArrayValue>(procValuePtr->getProcedurePtr()->getReturns())) {
         for(auto ele1 : arrayValuePtr->getArrayValue()) {
             if(saved.count(ele1) != 0) {
@@ -210,7 +197,6 @@ ThreeAddressNodePtr Transformer::transformInternalBin(InternalBinValuePtr intern
     else
         name = internalBinValuePtr->getName();
 
-    // left
     if(ConcreteNumValuePtr concreteNumValuePtr = dynamic_pointer_cast<ConcreteNumValue>(internalBinValuePtr->getLeft())){
         if(saved.count(internalBinValuePtr->getLeft()) == 0) {
             left = make_shared<ThreeAddressNode>(to_string(concreteNumValuePtr->getNumer()), nullptr, nullptr,
@@ -220,15 +206,12 @@ ThreeAddressNodePtr Transformer::transformInternalBin(InternalBinValuePtr intern
             left = saved[internalBinValuePtr->getLeft()];
         }
     }
-    // 存在数组的index为symbol的情况，所以左右孩子节点都有可能包含是包含symbol的arrayValueIndex的类型，因此需要对左右孩子节点都进行这样的判断，
     else if (shared_ptr<ArrayValueIndex> arrayValueIndex = dynamic_pointer_cast<ArrayValueIndex>(internalBinValuePtr->getLeft())) {
         left = transformArrayValueIndex(*arrayValueIndex, saved, nameCount);
     }
-    // 当left是BoxValue时，对应的internalBin为BOXOP，如： uint4 sbox_out = sbox<sbox_in>;
     else if (BoxValuePtr boxValuePtr = dynamic_pointer_cast<BoxValue>(internalBinValuePtr->getLeft())) {
         left = transformBoxValue(boxValuePtr, saved);
     }
-    // 当左孩子也为 InternalBinValuePtr 时，递归调用
     else if (InternalBinValuePtr tInternalBinValuePtr = dynamic_pointer_cast<InternalBinValue>(internalBinValuePtr->getLeft())) {
         if(saved.count(tInternalBinValuePtr) == 0) {
             left = transformInternalBin(tInternalBinValuePtr, saved, nameCount);
@@ -252,7 +235,6 @@ ThreeAddressNodePtr Transformer::transformInternalBin(InternalBinValuePtr intern
         }
     }
     else if (ParameterValuePtr parameterValuePtr = dynamic_pointer_cast<ParameterValue>(internalBinValuePtr->getLeft())) {
-        // 参数已经在 transform function 中被放到 saved 中
         left = saved[internalBinValuePtr->getLeft()];
         assert(left);
     }
@@ -265,8 +247,6 @@ ThreeAddressNodePtr Transformer::transformInternalBin(InternalBinValuePtr intern
         left = saved[internalBinValuePtr->getLeft()];
         if (left == nullptr) {
             if (internalBinValuePtr->getLeft()->toString().find("[SYMBOL]") != string::npos) {
-                // 此时left的值是不可计算的，因为可能与输入相关，那么就直接返回表达式表示的形式。
-                // 所以此时不能使用存储在saved中的具体数值，而是需要以表达式的方式存储。
                 ThreeAddressNodePtr temp_left(new ThreeAddressNode(internalBinValuePtr->getLeft()->getName(),
                                                                    nullptr, nullptr, ASTNode::Operator::NULLOP,
                                                                    getNodeType(internalBinValuePtr->getVarType())));
@@ -276,7 +256,6 @@ ThreeAddressNodePtr Transformer::transformInternalBin(InternalBinValuePtr intern
         assert(left);
     }
 
-    // right
     if(ConcreteNumValuePtr concreteNumValuePtr = dynamic_pointer_cast<ConcreteNumValue>(internalBinValuePtr->getRight())){
         if(saved.count(internalBinValuePtr->getRight()) == 0) {
             right = make_shared<ThreeAddressNode>(to_string(concreteNumValuePtr->getNumer()), nullptr, nullptr,
@@ -286,17 +265,12 @@ ThreeAddressNodePtr Transformer::transformInternalBin(InternalBinValuePtr intern
             right = saved[internalBinValuePtr->getRight()];
         }
     }
-    // 同样的，我们也增加对right的判断，看是否其是包含symbol的数组index访问
     else if (shared_ptr<ArrayValueIndex> arrayValueIndex = dynamic_pointer_cast<ArrayValueIndex>(internalBinValuePtr->getRight())) {
         right = transformArrayValueIndex(*arrayValueIndex, saved, nameCount);
     }
-    // 当 left 为 boxValue 时，right为arrayValue类型，即对arrayValue整体进行的操作，如 sbox substitution
-    // 此时，需要将arrayValue转化成internalBinValuePtr模式的三地址
     else if (ArrayValuePtr arrayValuePtr = dynamic_pointer_cast<ArrayValue>(internalBinValuePtr->getRight())) {
         right = transformArrayValue2oneTAN(arrayValuePtr, saved, nameCount);
     }
-    // 当 left 为 boxValue 时，right为也可以为internalUnValue类型（touint)，即对uints整体进行的操作，
-    // 如 sbox substitution
     else if (InternalUnValuePtr internalUnValuePtr = dynamic_pointer_cast<InternalUnValue>(internalBinValuePtr->getRight())) {
         right = transformInternalUn(internalUnValuePtr, saved, nameCount);
     }
@@ -324,7 +298,6 @@ ThreeAddressNodePtr Transformer::transformInternalBin(InternalBinValuePtr intern
 
     }
     else if (ParameterValuePtr parameterValuePtr = dynamic_pointer_cast<ParameterValue>(internalBinValuePtr->getRight())) {
-        // 参数已经在 transform function 中被放到 saved 中
         right = saved[internalBinValuePtr->getRight()];
         assert(right);
     }
@@ -332,23 +305,12 @@ ThreeAddressNodePtr Transformer::transformInternalBin(InternalBinValuePtr intern
         assert(false);
     }
 
-    /*
-     * 无论name等于何值，都需要在后面加上count，防止三地址实例名称重复。
-     * 此外，在实际代码中我们可能对同一个变量进行多次赋值，此时在进行转换时，
-     * 直接在后面添加一个counter会产生变量标识符重复覆盖的情况，如 p_out[0] = sbox<sbox_in>[0]; p_out[0] = p_out[0] ^ r;
-     * 此时两次出现的 p_out[0] 的变量标识符分别为 p_out0 和 p_out01, 貌似没有问题，但是当 p_out[i] 中 i 取 5 呢？
-     * 就有两个变量标识符 p_out5 和 p_out51， 会覆盖掉原来名为 p_out51 的变量，所以我们需要设计一种可以避免重复赋值情况下出现重复覆盖的情况
-     * 具体的做法是 getCount()会返回一个前面增加一个"_"的counter，以对有些情况下变量名会重复的区分
-     * */
-
-    // 检查本节点的name是否和其中一个孩子节点的name相同，如果相同，说明是对一个变量的重复赋值，用 name + "_n" 标记避免重复
     string count;
     if (name == left->getNodeName() or name == right->getNodeName())
         count = "";
     else
         count = getCount(name, nameCount);
 
-    // 根据varType选择NodeType，从而确定返回值的NodeType，分析时可以确定uints的s
     NodeType nodeType = getNodeType(internalBinValuePtr->getVarType());
     if (right->getNodeType() == NodeType::ARRAY)
         nodeType = NodeType::ARRAY;
@@ -375,8 +337,6 @@ ThreeAddressNodePtr Transformer::transformInternalUn(InternalUnValuePtr internal
                                                        nullptr, nullptr, ASTNode::Operator::NULLOP, getNodeType(concreteNumValuePtr->getVarType()));
             saved[internalUnValuePtr->getRand()] = operation;
         }
-        // 当rand为arrayValue类型时，说明是对arrayValue整体进行的操作，如 touint
-        // 此时，需要将arrayValue转化成internalBinValuePtr模式的三地址
         else if (ArrayValuePtr arrayValuePtr = dynamic_pointer_cast<ArrayValue>(internalUnValuePtr->getRand())) {
             operation = transformArrayValue2oneTAN(arrayValuePtr, saved, nameCount);
         }
@@ -393,19 +353,9 @@ ThreeAddressNodePtr Transformer::transformInternalUn(InternalUnValuePtr internal
     return rtn;
 }
 
-
-/*
- * 在ASTNode处理后的结构中，为 arrayValue 的只有 function call，
- *      1. roundFunction call
- *      2. sboxFunction call
- *      3. schdFunction call
- * 因为实际上是一次函数调用，返回一个数组，所以在转化为三地址形式时，
- * 我们只需要将所有的实参转化一次，然后将数组中的每个元素再分别转化为三地址形式
- * */
 vector<ThreeAddressNodePtr> Transformer::transformArrayValue(ArrayValuePtr arrayValuePtr,
                                                              map<ValuePtr, ThreeAddressNodePtr>& saved, map<string, int>& nameCount) {
     vector<ThreeAddressNodePtr> res;
-    // 实参的三地址转化
     for(auto val : arrayValuePtr->getArrayValue()) {
         if(ProcCallValueIndexPtr procCallValueIndexPtr = dynamic_pointer_cast<ProcCallValueIndex>(val)) {
             ProcCallValuePtr procCallValuePtr = dynamic_pointer_cast<ProcCallValue>(procCallValueIndexPtr->getProcCallValuePtr());
@@ -413,7 +363,6 @@ vector<ThreeAddressNodePtr> Transformer::transformArrayValue(ArrayValuePtr array
                 auto ele = procCallValuePtr->getArguments()[i];
                 if(ArrayValuePtr tArrayValuePtr = dynamic_pointer_cast<ArrayValue>(ele)) {
                     for(auto item : tArrayValuePtr->getArrayValue()) {
-                        // 如果被调用的对象是轮函数，则需要对每个参数的名字标记处理
                         std::string name = "push";
                         if (procCallValuePtr->getProcedurePtr()->getIsRndf()) {
                             if (i == 1)
@@ -456,10 +405,7 @@ vector<ThreeAddressNodePtr> Transformer::transformArrayValue(ArrayValuePtr array
                 } else if(ConcreteNumValuePtr concreteNumValue = dynamic_pointer_cast<ConcreteNumValue>(ele)) {
                     auto tempRes = make_shared<ThreeAddressNode>(to_string(concreteNumValue->getNumer()), nullptr, nullptr,
                                                                  ASTNode::Operator::NULLOP, getNodeType(ele->getVarType()));
-                    // res.push_back(tempres);
                     saved[ele] = tempRes;
-                    // 这里因为不是arrayvalue，所以在处理参数时，并没有用到push操作，但是后续进行inline时，是根据push操作来识别参数的
-                    // 所以这里增加一层，改为在res中存储新增的带有push操作的threeAddressNodePtr，而非tempres
                     ThreeAddressNodePtr threeAddressNodePtr(new ThreeAddressNode
                                                                     ("push", saved[ele], nullptr, ASTNode::Operator::PUSH,
                                                                      getNodeType(ele->getVarType())));
@@ -476,7 +422,6 @@ vector<ThreeAddressNodePtr> Transformer::transformArrayValue(ArrayValuePtr array
         break;
     }
 
-    // 返回数组的每个元素的三地址转化
     for(int i = 0; i < arrayValuePtr->getArrayValue().size(); i++) {
         auto ele = arrayValuePtr->getArrayValue()[i];
         if(ProcCallValueIndexPtr procCallValueIndexPtr = dynamic_pointer_cast<ProcCallValueIndex>(ele)) {
@@ -497,7 +442,6 @@ vector<ThreeAddressNodePtr> Transformer::transformArrayValue(ArrayValuePtr array
             res.push_back(threeAddressNodePtr);
             saved[ele] = threeAddressNodePtr;
         } else {
-            // 非 function call 的 value 报错
             assert(false);
         }
     }
@@ -506,13 +450,11 @@ vector<ThreeAddressNodePtr> Transformer::transformArrayValue(ArrayValuePtr array
 }
 
 
-// 本函数用于处理直接进行整体操作的ArrayValue，将arrayValue的各个元素用操作符BOXINDEX连接，转换成对应internalBinValue的对应三地址形式
 ThreeAddressNodePtr Transformer::transformArrayValue2oneTAN(ArrayValuePtr arrayValuePtr, map<ValuePtr, ThreeAddressNodePtr> &saved,
                                         map<string, int> &nameCount) {
     ThreeAddressNodePtr left = nullptr;
     ThreeAddressNodePtr right = nullptr;
 
-    // 对每个元素，按照其对象类型，生成对应类型的三地址形式
     ValuePtr ele0 = arrayValuePtr->getValueAt(0);
     if(ConcreteNumValuePtr concreteNumValuePtr = dynamic_pointer_cast<ConcreteNumValue>(ele0)){
         if(saved.count(ele0) == 0) {
@@ -529,7 +471,6 @@ ThreeAddressNodePtr Transformer::transformArrayValue2oneTAN(ArrayValuePtr arrayV
         left->setNodeName(name);
     }
     else if (InternalBinValuePtr internalBinValuePtr = dynamic_pointer_cast<InternalBinValue>(ele0)) {
-        // 因为transformInternalBin会更改node的名字（后面增加一个counter），所以备份初始的名字，并且后面也更新一下
         std::string name = internalBinValuePtr->getName();
         left = transformInternalBin(internalBinValuePtr, saved, nameCount);
         left->setNodeName(name);
@@ -539,7 +480,6 @@ ThreeAddressNodePtr Transformer::transformArrayValue2oneTAN(ArrayValuePtr arrayV
         left = transformInternalUn(internalUnValue, saved, nameCount);
         left->setNodeName(name);
     }
-    // box的操作对象可以直接是参数
     else if (ParameterValuePtr parameterValuePtr = dynamic_pointer_cast<ParameterValue>(ele0)) {
         if(saved.count(parameterValuePtr) == 0) {
             string count = getCount(ele0->getName(), nameCount);
@@ -549,7 +489,6 @@ ThreeAddressNodePtr Transformer::transformArrayValue2oneTAN(ArrayValuePtr arrayV
             left = saved[parameterValuePtr];
         }
     }
-    // sbox function call -> ProcCallValueIndex
     else if (ProcCallValueIndexPtr procCallValueIndexPtr = dynamic_pointer_cast<ProcCallValueIndex>(ele0)) {
         std::string name = procCallValueIndexPtr->getName();
         ThreeAddressNodePtr func = nullptr;
@@ -598,7 +537,7 @@ ThreeAddressNodePtr Transformer::transformArrayValue2oneTAN(ArrayValuePtr arrayV
 
 
 void Transformer::transformProcedures() {
-    int sboxFuncIdx = 0; // There may be multiple functions for sboxes
+    int sboxFuncIdx = 0;
     for(auto ele : procedures) {
         if (ele->getProcedurePtr()->getIsFn()) {
             ele->setName("main");
@@ -619,8 +558,6 @@ string Transformer::getCount(string name, map<string, int>& nameCount) {
         return "";
     } else {
         nameCount[name]++;
-        //return to_string(nameCount[name]);
-        // 前面增加一个"_"作以对有些情况下，变量名会重复的区分
         return "_#" + to_string(nameCount[name]);
     }
 }
@@ -635,8 +572,6 @@ ThreeAddressNodePtr Transformer::transformArrayValueIndex(ArrayValueIndex arrayV
                                                           map<string, int> &nameCount) {
     ThreeAddressNodePtr left = nullptr;
     ThreeAddressNodePtr right = nullptr;
-    //这里ArrayValueIndex转换成三地址形式，左孩子为数组名，右孩子为表达式，即寻找index的表达式，同时本节点的名字为t
-    //若 arrayValueIndex name 为空，命名为 t，否则就沿用原名
     string name;
     if(arrayValueIndex.getName() == "")
         name = "t";
@@ -644,7 +579,6 @@ ThreeAddressNodePtr Transformer::transformArrayValueIndex(ArrayValueIndex arrayV
         name = arrayValueIndex.getName();
     string count = getCount(name, nameCount);
 
-    // 左孩子节点存储对应的数组的三地址形式
     if (saved.count(arrayValueIndex.getArrayValuePtr()) == 0) {
         ThreeAddressNodePtr tempLeft(new ThreeAddressNode(arrayValueIndex.getArrayValuePtr()->getName(), nullptr, nullptr, ASTNode::Operator::NULLOP, NodeType::ARRAY));
         left = tempLeft;
@@ -653,11 +587,9 @@ ThreeAddressNodePtr Transformer::transformArrayValueIndex(ArrayValueIndex arrayV
         left = saved[arrayValueIndex.getArrayValuePtr()];
     }
 
-    // 右孩子节点存储访问index的对应表达式的三地址形式
     if (InternalBinValuePtr internalBinValuePtr = dynamic_pointer_cast<InternalBinValue>(arrayValueIndex.getSymbolIndex())) {
         right = transformInternalBin(internalBinValuePtr, saved, nameCount);
     }
-    // 可能直接将参数作为symbol index
     else if (ParameterValuePtr parameterValuePtr = dynamic_pointer_cast<ParameterValue>(arrayValueIndex.getSymbolIndex())) {
         if(saved.count(parameterValuePtr) == 0) {
             string tCount = getCount(arrayValueIndex.getSymbolIndex()->getName(), nameCount);
@@ -680,9 +612,6 @@ ThreeAddressNodePtr Transformer::transformArrayValueIndex(ArrayValueIndex arrayV
 ThreeAddressNodePtr Transformer::transformBoxValue(BoxValuePtr boxValuePtr, map<ValuePtr, ThreeAddressNodePtr> &saved) {
     ThreeAddressNodePtr left = nullptr;
     ThreeAddressNodePtr right = nullptr;
-    // 这里BoxValue转换成三地址形式，左右孩子均为空，Box的具体值在ASTNode时另外存储，后续建模过程中单独处理，
-    // 转换后的三地址形式用于索引查找对应Box的具体取值
-    // 这里用boxType和box标识符连接作为标识符，可以根据boxType来判断对应的操作选择
     string name = boxValuePtr->getBoxType() + boxValuePtr->getName();
     ThreeAddressNodePtr rtn(new ThreeAddressNode(name, nullptr,
                                                        nullptr, ASTNode::Operator::NULLOP, NodeType::BOX));

@@ -11,7 +11,6 @@ bool ValueCommon::isNoParameter(ValuePtr valuePtr) {
     return noPara;
 }
 
-// 这里是递归查看是否给定的 value 中是 param
 void ValueCommon::isNoParameterHelper(ValuePtr valuePtr, bool &noPara, std::set<ValuePtr> &visited) {
     if(!noPara)
         return;
@@ -44,7 +43,6 @@ void ValueCommon::isNoParameterHelper(ValuePtr valuePtr, bool &noPara, std::set<
             }
     }
     else if (ArrayValueIndex* value = dynamic_cast<ArrayValueIndex*>(valuePtr.get())) {
-        // 这里我们新添加一个判断条件，对于有的数组而言，其数组本身是常数数组，但是需要访问的参数位置为symbol类型，此时需要判断一下
         if (value->getSymbolIndex() != nullptr)
             noPara = false;
         return;

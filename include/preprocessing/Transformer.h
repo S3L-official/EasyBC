@@ -17,7 +17,6 @@ private:
     vector<ProcValuePtr> procedures;
     vector<ProcedureHPtr> procedureHs;
 
-    // 在transformArrayValue2oneTAN中作为counter使用
     int leftoverCounter = 0;
 public:
     const vector<ProcedureHPtr> &getProcedureHs() const;

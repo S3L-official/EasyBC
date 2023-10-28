@@ -165,12 +165,9 @@ void DiffMILPcons::bXorC3(std::string path, int inputIdx1, int inputIdx2, int ou
     scons.close();
 }
 
-// without introduce extra variables
 void DiffMILPcons::bMatrixEntryC12(std::string path, std::vector<std::vector<int>> inputIdx, std::vector<int> outputIdx,
                                    std::vector<int> overflows, std::vector<int> module, int &xCounter, int &yCounter,
                                    int &fCounter, int &dCounter, int chooser) {
-    // y_i 映射的 x_j 的异或最终结果用单独的 output 来记录，
-    // 还需要处理完 溢出位决定要不要跟模 异或以后，在将输出赋值给 y_i
     std::vector<int> input1 = inputIdx[0];
     std::vector<int> input2 = inputIdx[1];
     std::vector<int> output;
@@ -178,7 +175,6 @@ void DiffMILPcons::bMatrixEntryC12(std::string path, std::vector<std::vector<int
         output.push_back(xCounter);
         xCounter++;
     }
-    //MultibXORC(path, input1, input2, output);
     for (int i = 0; i < input1.size(); ++i) {
         if (chooser == 1)
             bXorC1(path, input1[i], input2[i], output[i], dCounter);
@@ -195,7 +191,6 @@ void DiffMILPcons::bMatrixEntryC12(std::string path, std::vector<std::vector<int
                 output.push_back(xCounter);
                 xCounter++;
             }
-            //MultibXORC(path, input1, input2, output);
             for (int j = 0; j < input1.size(); ++j) {
                 if (chooser == 1)
                     bXorC1(path, input1[j], input2[j], output[j], dCounter);
@@ -207,8 +202,6 @@ void DiffMILPcons::bMatrixEntryC12(std::string path, std::vector<std::vector<int
         }
     }
 
-    // 处理 overflow 的最终值，结果应该是其中所有值的异或
-    // 没有溢出位
     int fIdx = fCounter;
     fCounter++;
     bool fFlag = true;
@@ -222,7 +215,6 @@ void DiffMILPcons::bMatrixEntryC12(std::string path, std::vector<std::vector<int
                 scons << "x" << outputIdx[i] << " - x" << lastOut[i] << " = 0\n";
             }
         }
-            // 溢出位为1时，标识溢出位的最终值即为该溢出位的值
         else if (overflows.size() == 1) {
             scons << "f" << fIdx << " - x" << overflows[0] << " = 0\n";
         } else if (overflows.size() >= 2) {
@@ -246,7 +238,6 @@ void DiffMILPcons::bMatrixEntryC12(std::string path, std::vector<std::vector<int
             scons << "f" << fIdx << " - x" << XORout << " = 0\n";
         }
     }
-    // 如果有溢出位，根据 溢出位异或的最终值，添加 indicator constrain, 描述是否需要和模进行异或
     if (fFlag) {
         for (int i = 0; i < module.size(); ++i) {
             if (module[module.size()-1-i] == 0) {
@@ -297,7 +288,6 @@ void DiffMILPcons::bMatrixEntryC3(std::string path, std::vector<std::vector<int>
         bNXorC3(path, tInput, output[i], yCounter);
     }
 
-    // 处理 overflow 的最终值，结果应该是其中所有值的异或
     int fIdx = fCounter;
     fCounter++;
     bool fFlag = true;
@@ -311,11 +301,9 @@ void DiffMILPcons::bMatrixEntryC3(std::string path, std::vector<std::vector<int>
                 scons << "x" << outputIdx[i] << " - x" << output[i] << " = 0\n";
             }
         }
-            // 溢出位为1时，标识溢出位的最终值即为该溢出位的值
         else if (overflows.size() == 1) {
             scons << "f" << fIdx << " - x" << overflows[0] << " = 0\n";
         } else if (overflows.size() >= 2) {
-            // 多个溢出位时，这里直接写入约束，不再调用 bNXorC
             for (int i = 0; i < overflows.size() - 1; ++i) {
                 scons << "x" << overflows[i] << " + ";
             }
@@ -325,11 +313,8 @@ void DiffMILPcons::bMatrixEntryC3(std::string path, std::vector<std::vector<int>
             yCounter++;
         }
     }
-    // 如果有溢出位，根据 溢出位异或的最终值，添加 indicator constrain, 描述是否需要和模进行异或
     if (fFlag) {
         for (int i = 0; i < module.size(); ++i) {
-            // 这里是根据 module 的每位值，直接建立output对应位于outputIdx对应位的关系了
-            // 逻辑上，若fIdx为1时，output 与 module 异或后的值是 outputIdx 对应位的值
             if (module[module.size()-1-i] == 0) {
                 scons << "f" << fIdx << " == 1 -> " << "x" << outputIdx[module.size()-1-i] << " - x" << output[i] << " = 0\n";
                 scons << "f" << fIdx << " == 0 -> " << "x" << outputIdx[module.size()-1-i] << " - x" << output[i] << " = 0\n";
@@ -347,10 +332,8 @@ void DiffMILPcons::bSboxC1(std::string path, std::vector<int> inputIdx, std::vec
     if (!scons){
         std::cout << "Wrong file path ! " << std::endl;
     } else {
-        // input
-        /*for (auto i : inputIdx)
+        for (auto i : inputIdx)
             scons << "x" << i << " + ";
-        // output
         for (int i = 0; i < outputIdx.size(); ++i) {
             if (i != outputIdx.size() - 1)
                 scons << "x" << outputIdx[i] << " + ";
@@ -362,7 +345,7 @@ void DiffMILPcons::bSboxC1(std::string path, std::vector<int> inputIdx, std::vec
             scons << "d" << dCounter << " - x" << i << " >= 0\n";
         for (auto i : outputIdx)
             scons << "d" << dCounter << " - x" << i << " >= 0\n";
-        dCounter++;*/
+        dCounter++;
 
         for (int i = 0; i < inputIdx.size(); ++i) {
             if (i != inputIdx.size() - 1)
@@ -399,27 +382,28 @@ void DiffMILPcons::bSboxC1(std::string path, std::vector<int> inputIdx, std::vec
             scons << " >= 0\n";
         }
 
-        // sbox modeling ineqs
-        for (auto ineq : ineqs) {
-            int idx = 0;
-            for (auto i : inputIdx) {
-                if ((ineq[idx]) >= 0)
-                    scons << " + " << abs((ineq[idx])) << " x" << i;
+        if (ineqs.size() > 1) {
+            for (auto ineq : ineqs) {
+                int idx = 0;
+                for (auto i : inputIdx) {
+                    if ((ineq[idx]) >= 0)
+                        scons << " + " << abs((ineq[idx])) << " x" << i;
+                    else
+                        scons << " - " << abs((ineq[idx])) << " x" << i;
+                    idx++;
+                }
+                for (auto i : outputIdx) {
+                    if ((ineq[idx]) >= 0)
+                        scons << " + " << abs((ineq[idx])) << " x" << i;
+                    else
+                        scons << " - " << abs((ineq[idx])) << " x" << i;
+                    idx++;
+                }
+                if ((ineq[idx]) > 0)
+                    scons << " >= -" << abs((ineq[idx])) << "\n";
                 else
-                    scons << " - " << abs((ineq[idx])) << " x" << i;
-                idx++;
+                    scons << " >= " << abs((ineq[idx])) << "\n";
             }
-            for (auto i : outputIdx) {
-                if ((ineq[idx]) >= 0)
-                    scons << " + " << abs((ineq[idx])) << " x" << i;
-                else
-                    scons << " - " << abs((ineq[idx])) << " x" << i;
-                idx++;
-            }
-            if ((ineq[idx]) > 0)
-                scons << " >= -" << abs((ineq[idx])) << "\n";
-            else
-                scons << " >= " << abs((ineq[idx])) << "\n";
         }
     }
     scons.close();
@@ -466,7 +450,6 @@ void DiffMILPcons::bSboxC2(std::string path, std::vector<int> inputIdx, std::vec
             scons << " >= 0\n";
         }
 
-        // sbox modeling ineqs
         for (auto ineq : ineqs) {
             int idx = 0;
             for (auto i : inputIdx) {
@@ -509,7 +492,6 @@ void DiffMILPcons::bSboxC3(std::string path, std::vector<int> inputIdx, std::vec
             scons << "A" << ACounter << " - x" << i << " >= 0\n";
         ACounter++;
 
-        // sbox modeling ineqs
         for (auto ineq : ineqs) {
             int idx = 0;
             for (auto i : inputIdx) {
@@ -542,8 +524,6 @@ void DiffMILPcons::bAddC(std::string path, std::vector<int> inputIdx1, std::vect
     if (!scons){
         std::cout << "Wrong file path ! " << std::endl;
     } else {
-        // pCounter = 1;
-        // Theorem 1
         scons << "x" << inputIdx1[addSize - 1] << " + x" << inputIdx2[addSize - 1] << " + x" << outputIdx[addSize - 1] << " <= 2\n";
         scons << "x" << inputIdx1[addSize - 1] << " + x" << inputIdx2[addSize - 1] << " + x" << outputIdx[addSize - 1] << " - 2 d" << dCounter << " >= 0\n";
         scons << "d" << dCounter << " - x" << inputIdx1[addSize - 1] << " >= 0\n";
@@ -551,7 +531,6 @@ void DiffMILPcons::bAddC(std::string path, std::vector<int> inputIdx1, std::vect
         scons << "d" << dCounter << " - x" << outputIdx[addSize - 1] << " >= 0\n";
         dCounter++;
 
-        // Theorem 2
         for (int i = addSize - 1; i > 0; --i) {
             for (auto ineq : ineqs) {
                 int idx = 0;
@@ -613,10 +592,8 @@ void DiffMILPcons::dSboxC1(std::string path, std::vector<int> inputIdx, std::vec
     if (!scons){
         std::cout << "Wrong file path ! " << std::endl;
     } else {
-        // input
         for (auto i : inputIdx)
             scons << "x" << i << " + ";
-        // output
         for (int i = 0; i < outputIdx.size(); ++i) {
             if (i != outputIdx.size() - 1)
                 scons << "x" << outputIdx[i] << " + ";
@@ -654,7 +631,6 @@ void DiffMILPcons::dSboxC1(std::string path, std::vector<int> inputIdx, std::vec
             scons << " >= 0\n";
         }
 
-        // sbox modeling ineqs
         for (auto ineq : ineqs) {
             int idx = 0;
             for (auto i : inputIdx) {
@@ -718,7 +694,6 @@ void DiffMILPcons::dSboxC2(std::string path, std::vector<int> inputIdx, std::vec
             scons << " >= 0\n";
         }
 
-        // sbox modeling ineqs
         for (auto ineq : ineqs) {
             int idx = 0;
             for (auto i : inputIdx) {
@@ -758,7 +733,6 @@ void DiffMILPcons::dSboxC3(std::string path, std::vector<int> inputIdx, std::vec
     if (!scons){
         std::cout << "Wrong file path ! " << std::endl;
     } else {
-        // sbox modeling ineqs
         for (auto ineq : ineqs) {
             int idx = 0;
             for (auto i : inputIdx) {
@@ -799,8 +773,6 @@ void DiffMILPcons::dAddC(std::string path, std::vector<int> inputIdx1, std::vect
     if (!scons){
         std::cout << "Wrong file path ! " << std::endl;
     } else {
-        // pCounter = 1;
-        // Theorem 1
         scons << "x" << inputIdx1[addSize - 1] << " + x" << inputIdx2[addSize - 1] << " + x" << outputIdx[addSize - 1] << " <= 2\n";
         scons << "x" << inputIdx1[addSize - 1] << " + x" << inputIdx2[addSize - 1] << " + x" << outputIdx[addSize - 1] << " - 2 d" << dCounter << " >= 0\n";
         scons << "d" << dCounter << " - x" << inputIdx1[addSize - 1] << " >= 0\n";
@@ -808,7 +780,6 @@ void DiffMILPcons::dAddC(std::string path, std::vector<int> inputIdx1, std::vect
         scons << "d" << dCounter << " - x" << outputIdx[addSize - 1] << " >= 0\n";
         dCounter++;
 
-        // Theorem 2
         for (int i = addSize - 1; i > 0; --i) {
             for (auto ineq : ineqs) {
                 int idx = 0;

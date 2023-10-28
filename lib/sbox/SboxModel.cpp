@@ -6,9 +6,7 @@
 SboxM::SboxM(std::string name, std::vector<int> sbox, std::string mode) :
     name_(std::move(name)), sbox_(std::move(sbox)), mode_(std::move(mode)) {
 
-    // the input size of the sbox is the size of the sbox
     this->ddtInputSize_ = this->sbox_.size();
-    // the output size of the sbox is the value of the element whose value is the largest
     auto tmp = std::max_element(this->sbox_.begin(), this->sbox_.end());
     this->ddtOutputSize_ = this->sbox_[tmp - this->sbox_.begin()] + 1;
     this->sboxInputSize_ = int(log2(this->ddtInputSize_));
@@ -26,7 +24,7 @@ SboxM::SboxM(std::string name, std::vector<int> sbox, std::string mode) :
     pattern_ext();
     sage_ext();
     trueTableGen();
-    possBintoHex(); // for superball
+    possBintoHex();
 }
 
 SboxM::SboxM(std::string name, std::string mode) : name_(std::move(name)), mode_(std::move(mode)) {
@@ -44,9 +42,6 @@ void SboxM::ddt_gen() {
         for (int j = 0; j < this->ddtInputSize_; ++j) {
             int output1 = sbox_[i];
             int output2 = sbox_[j];
-            // 就目前所有的benchmark，存在inputsize和outputsize不等的只有DES的sbox
-            // 而DES有输入决定的输出是根据最低位和最高位组成的2bit数作为行号来确定output的
-            // 所以我们需要对这个sbox进行特殊处理
             if (this->ddtInputSize_ != this->ddtOutputSize_) {
                 int outputIndex1 = ((i / 32) * 2 + (i % 2)) * 16 +
                                    ((i % 32) / 2);
@@ -56,10 +51,7 @@ void SboxM::ddt_gen() {
                 output1 = sbox_[outputIndex1];
                 output2 = sbox_[outputIndex2];
             }
-            // debug
-            //std::cout << i << ", " << j << " -> " << output1 << ", " << output2 << std::endl;
             ddt[i ^ j][output1 ^ output2]++;
-            //ddt[i ^ j][sbox_[i] ^ sbox_[j]]++;
         }
     ddtPath_ += std::to_string(int(log2(ddtInputSize_))) + "bits/";
     system(("mkdir -p " + ddtPath_).c_str());
@@ -156,15 +148,10 @@ void SboxM::pattern_ext() {
     int count = 0;
     std::string temp;
 
-    // 这里有一些现成的encode方法我们可以直接按照原有的使用，
-    // 对于不符合的情况，我们再用general的方法通过maxSat求解
-    bool usePreSet = false; // 用于判定是否使用预设定的 encode 方式，目前预设定三种。
-    // 现根据获得的概率类型进行判断
+    bool usePreSet = false;
     int st = 0;
-    // 目前只对 4-bit 的 S-box 提供预设扩展位 encode
     if (len == 4) {
         if (ddtProbNum_ == 4) {
-            // 判断是否概率是 0, 2, 4, 16
             for (auto p: {0, 2, 4, 16}) {
                 for (auto ddtP: ddtProb_) {
                     if (p == ddtP) st++;
@@ -179,16 +166,7 @@ void SboxM::pattern_ext() {
             }
             extWeighted_ = {600, 400, 283};
         }
-        // 后续可以增加下面的概率情况的预扩展位
-        /*else if (ddtProbNum_ == 6) {
-            for (auto p: {0, 2, 4, 6, 12, 16}) {
-                for (auto ddtP: ddtProb_) {
-                    if (p == ddtP) st++;
-                }
-            }
-        }*/
     }
-    // ASCON test
     else if (len == 5) {
         if (ddtProbNum_ == 5) {
             for (auto p: {0, 2, 4, 8, 32}) {
@@ -199,10 +177,8 @@ void SboxM::pattern_ext() {
             extWeighted_ = {1, 3};
         }
     }
-        // 这里我们需要对DES进行特殊处理
     else if (len == 6) {
         if (ddtProbNum_ == 10) {
-            // 判断是否概率是 64, 0, 6, 2, 4, 10, 12, 8, 14, 16
             for (auto p: {64, 0, 6, 2, 4, 10, 12, 8, 14, 16}) {
                 for (auto ddtP: ddtProb_) {
                     if (p == ddtP) st++;
@@ -214,11 +190,8 @@ void SboxM::pattern_ext() {
     if (st == ddtProbNum_)
         usePreSet = true;
     else {
-        // 因为5bit及以上的sbox进行概率扩展时，实际上的模型基本不可解，
-        // 所以我们只对4bit以及以下的sbox size进行处理
         if (len <= 4) {
             SboxExC sboxExC(name_, int(pow(2, int(sqrt(sbox_.size()))) / 2), ddtProb_);
-            // 获取每个概率是如何 encode 的，并且获取对应的权重。
             extWeighted_ = sboxExC.getWeighted();
             std::vector<std::string> encodes = sboxExC.getEncodes();
             for (int i = 0; i < encodes.size(); ++i) {
@@ -235,8 +208,6 @@ void SboxM::pattern_ext() {
         for (int i = 0; i < line.size(); ++i) {
             std::bitset<SBOX_LENGTH> yIdx = i;
             if (line[i] != "0"){
-                /*std::string poss = xIdx.to_string().substr(SBOX_LENGTH - len, len) +
-                                   yIdx.to_string().substr(SBOX_LENGTH - len, len);*/
                 std::string poss = xIdx.to_string().substr(SBOX_LENGTH - this->sboxInputSize_, this->sboxInputSize_) +
                                    yIdx.to_string().substr(SBOX_LENGTH - this->sboxOutputSize_, this->sboxOutputSize_);
 
@@ -246,13 +217,12 @@ void SboxM::pattern_ext() {
                     possP.push_back(poss);
                 else if (mode_ == "DC") {
                     if (usePreSet) {
-                        // 使用预设的固定 encode
                         if (ddtProbNum_ == 4) {
                             if (line[i] == "16")
                                 poss += "00";
-                            else if (line[i] == "4") // 2 ^ -2
+                            else if (line[i] == "4")
                                 poss += "01";
-                            else if (line[i] == "2") // 2 ^ -3
+                            else if (line[i] == "2")
                                 poss += "11";
                         } else if (ddtProbNum_ == 5 and len == 4) {
                             if (line[i] == "16")
@@ -264,28 +234,25 @@ void SboxM::pattern_ext() {
                             else if (line[i] == "2")
                                 poss += "100";
                         }
-                        // ASCON pre encode
                         else if (ddtProbNum_ == 5 and len == 5) {
                             if (line[i] == "32")
                                 poss += "00";
-                            else if (line[i] == "4" or line[i] == "8") // 2 ^ -3
+                            else if (line[i] == "4" or line[i] == "8")
                                 poss += "01";
-                            else if (line[i] == "2") // 2 ^ -4
+                            else if (line[i] == "2")
                                 poss += "11";
                         }
-                        // DES pre encode
                         else if (ddtProbNum_ == 10) {
                             if (line[i] == "64")
                                 poss += "00";
-                            else if (line[i] == "16" or line[i] == "14" or line[i] == "12") // 2 ^ -1
+                            else if (line[i] == "16" or line[i] == "14" or line[i] == "12")
                                 poss += "10";
-                            else if (line[i] == "10" or line[i] == "8" or line[i] == "6") // 2 ^ -3
+                            else if (line[i] == "10" or line[i] == "8" or line[i] == "6")
                                 poss += "01";
-                            else if (line[i] == "4" or line[i] == "2") // 2 ^ -4
+                            else if (line[i] == "4" or line[i] == "2")
                                 poss += "11";
                         }
                     } else {
-                        // 使用 maxSat 求解得到的 encode
                         poss += ddtProbEncode_[line[i]];
                     }
                     possT[poss] = 1;
@@ -297,28 +264,6 @@ void SboxM::pattern_ext() {
         count++;
     }
 
-    /*if (mode_ == "AS") {
-        for (int i = 0; i < (1 << (len * 2)); i++) {
-            std::bitset<SBOX_LENGTH * 2> enumer = i;
-            std::string imposs = enumer.to_string().substr(SBOX_LENGTH * 2 - len * 2,
-                                                           len * 2);
-            if (possT[imposs] == 1)
-                continue;
-            else
-                impossP.push_back(imposs);
-        }
-    } else {
-        // 这里实际上已经确定了扩展位的位数，即weighted的size，根据这个来确定 impossP就可以了。
-        for (int i = 0; i < (1 << (len * 2 + extWeighted_.size())); i++){
-            std::bitset<SBOX_LENGTH * 2> enumer = i;
-            std::string imposs = enumer.to_string().substr(SBOX_LENGTH * 2 - len * 2 - extWeighted_.size(),
-                                                           len * 2 + extWeighted_.size());
-            if (possT[imposs] == 1)
-                continue;
-            else
-                impossP.push_back(imposs);
-        }
-    }*/
     if (mode_ == "AS") {
         for (int i = 0; i < (1 << (this->sboxInputSize_ + this->sboxOutputSize_)); i++) {
             std::bitset<SBOX_LENGTH * 2> enumer = i;
@@ -330,7 +275,6 @@ void SboxM::pattern_ext() {
                 impossP.push_back(imposs);
         }
     } else {
-        // 这里实际上已经确定了扩展位的位数，即weighted的size，根据这个来确定 impossP就可以了。
         for (int i = 0; i < (1 << ((this->sboxInputSize_ + this->sboxOutputSize_) + extWeighted_.size())); i++){
             std::bitset<SBOX_LENGTH * 2> enumer = i;
             std::string imposs = enumer.to_string().substr(SBOX_LENGTH * 2 - (this->sboxInputSize_ + this->sboxOutputSize_) - extWeighted_.size(),
@@ -378,10 +322,7 @@ void SboxM::pattern_ext() {
 }
 
 void SboxM::sage_ext() {
-    std::cout << "sage input start " << std::endl;
     std::system((std::string("sage ") + sageInPath_ + " > " + sageOutPath_).c_str());
-    std::cout << "sage input finish " << std::endl;
-
     std::ifstream file_extract;
     file_extract.open(sageOutPath_);
     std::string temp;
@@ -427,7 +368,6 @@ void SboxM::arxDiff() {
         std::bitset<vecLen> tempVec = counter;
         std::string tempVecStr = tempVec.to_string();
 
-        // 判断每个vec的值是否为possible differential pattern
         if (tempVecStr[0] == tempVecStr[1] and tempVecStr[0] == tempVecStr[2]) {
             int tXor = stoi(std::to_string(tempVecStr[3])) ^ stoi(std::to_string(tempVecStr[4])) ^ stoi(std::to_string(tempVecStr[5]));
             if (stoi(std::to_string(tempVecStr[0])) == tXor) {
@@ -480,9 +420,8 @@ void SboxM::arxLinear() {
         std::bitset<vecLen> tempVec = counter;
         std::string tempVecStr = tempVec.to_string();
 
-        // 判断每个vec的值是否为possible linear transition
         int u = 4 * stoi(std::string(1, tempVecStr[1])) + 2 * stoi(std::string(1, tempVecStr[2])) + stoi(std::string(1, tempVecStr[3]));
-        // 第一个元素是e0
+
         if (tempVecStr[0] == '0') {
             if (u == 7 and tempVecStr[4] == '1') {
                 poss_p.push_back(tempVecStr);
@@ -491,7 +430,6 @@ void SboxM::arxLinear() {
                 poss_p.push_back(tempVecStr);
                 poss_t[tempVecStr] = 1;
             }
-        // 第一个元素是e1
         } else if (tempVecStr[0] == '1') {
             if ((u == 0 or u == 3 or u == 5 or u == 6) and tempVecStr[4] == '1') {
                 poss_p.push_back(tempVecStr);

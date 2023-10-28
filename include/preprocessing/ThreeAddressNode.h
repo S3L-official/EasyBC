@@ -44,7 +44,6 @@ private:
     NodeType nodeType;
     int indexOfCall;
 
-    // the value of the ThreeAddressNode instance
     int value;
 
 
@@ -85,25 +84,16 @@ public:
         if(addressPtr->lhs != nullptr) {
             assert(nodeMap.count(addressPtr->lhs) != 0);
             lhs = nodeMap[addressPtr->lhs];
-//            if(lhs == nullptr) {
-//                nodeMap[addressPtr->lhs] = make_shared<ThreeAddressNode>(addressPtr->lhs, nodeMap);
-//            }
-//            lhs = nodeMap[addressPtr->lhs->getIDWithOutLineNumber()];
         }
         if(addressPtr->rhs != nullptr) {
             assert(nodeMap.count(addressPtr->rhs) != 0);
             rhs = nodeMap[addressPtr->rhs];
-//            if(rhs == nullptr) {
-//                nodeMap[addressPtr->rhs->getIDWithOutLineNumber()] = make_shared<ThreeAddressNode>(addressPtr->rhs, nodeMap);
-//            }
-//            rhs = nodeMap[addressPtr->rhs->getIDWithOutLineNumber()];
         }
         op = addressPtr->op;
         nodeType = addressPtr->nodeType;
         SSAIndex = addressPtr->SSAIndex;
         lineNumber = addressPtr->lineNumber;
         numberOfChild = 0;
-//        numberOfChild = addressPtr->numberOfChild;
     }
 
     ThreeAddressNode(ThreeAddressNodePtr& addressPtr) {
@@ -177,7 +167,7 @@ public:
         if(saved.count(node->getNodeName()) != 0)
             return saved[node->getNodeName()];
 
-        ThreeAddressNodePtr newNode = nullptr;//make_shared<ThreeAddressNode>(node, saved);
+        ThreeAddressNodePtr newNode = nullptr;
         if(node->getNodeType() == NodeType::UINT){
             newNode = make_shared<ThreeAddressNode>(node);
         }
@@ -209,37 +199,11 @@ public:
         if(saved.count(node->getNodeName()) != 0 && node->getNodeType() != NodeType::PARAMETER)
             return saved[node->getNodeName()];
 
-        ThreeAddressNodePtr newNode = nullptr;//make_shared<ThreeAddressNode>(node, saved);
-        if(node->getOp() == ASTNode::Operator::CALL) {
-            cout << "hello" << endl;
-        }
-        if(node->getNodeName() == "a0")
-            cout << "hello" << endl;
-        /*if(node->getNodeType() == NodeType::RANDOM) {
-            newNode = make_shared<ThreeAddressNode>(node->getNodeName() + sufix , node);
-        }*/
-        else if(node->getNodeType() == NodeType::PARAMETER) {
+        ThreeAddressNodePtr newNode = nullptr;
+        if(node->getNodeType() == NodeType::PARAMETER) {
             assert(formalToActual.count(node->getNodeName()) != 0);
             newNode = formalToActual[node->getNodeName()];
         }
-        /*else if(node->getNodeType() == NodeType::INTERNAL) {
-            ThreeAddressNodePtr lhs = copyNodeWithPath(sufix, node->getLhs(), saved, formalToActual);
-
-            ThreeAddressNodePtr rhs = nullptr;
-            if(node->getRhs()) {
-                rhs = copyNodeWithPath(sufix ,node->getRhs(), saved, formalToActual);
-            }
-
-            newNode = make_shared<ThreeAddressNode>(node->getNodeName() + sufix, node);
-            newNode->setLhs(lhs);
-            newNode->setRhs(rhs);
-
-            lhs->addParents(newNode);
-            if(rhs) {
-                rhs->addParents(newNode);
-            }
-
-        }*/
         else if(node->getNodeType() == NodeType::FUNCTION) {
             newNode = make_shared<ThreeAddressNode>(node->getNodeName() + sufix, node);
         }
@@ -286,10 +250,6 @@ public:
     void prettyPrint() {
         if(nodeType == NodeType::UINT)
             return;
-        /*if(nodeType == NodeType::RANDOM) {
-            cout << getID() + " = $" << "(" << printNodeType() << ")"<< printNodeDistribution() << endl;
-            return;
-        }*/
 
         if(lhs == nullptr && rhs == nullptr) {
             cout << getID() << "(" << printNodeType() << ")" << endl;
@@ -354,9 +314,6 @@ public:
     }
 
     string prettyPrint4() {
-        /*if(nodeType == NodeType::RANDOM) {
-            return "$" + getNodeName();
-        }*/
         string result = getNodeName() + " = " + lhs->getNodeName();
         string oper;
         if(rhs != nullptr) {
@@ -420,9 +377,6 @@ public:
         if(nodeType == NodeType::FUNCTION) {
             return "CALL " + getNodeName() ;
         }
-        /*if(nodeType == NodeType::RANDOM) {
-            return "$" + getNodeName();
-        }*/
         if(!lhs)
             return getNodeName();
         string left =  lhs->prettyPrint5();
@@ -536,15 +490,6 @@ public:
     }
 
     string prettyPrint2() {
-        /*if(this->getNodeType() == NodeType::RANDOM) {
-            return " $" + this->getID() + " ";
-        }
-        else if(this->getNodeType() == NodeType::PUBLIC
-                  || this->getNodeType() == NodeType::CONSTANT || this->getNodeType() == NodeType::PARAMETER)
-            return " " + this->getID() + " ";
-        else if(this->getNodeType() == NodeType::PRIVATE)
-            return  " '" + this->getID() + " ";
-        else*/
         if(this->getOp() == ASTNode::Operator ::NOT)
             return  "!" + this->getLhs()->prettyPrint2();
         else if(this->getOp() == ASTNode::Operator ::ADD)
@@ -629,10 +574,6 @@ public:
         } else if(rhs == A) {
             rhs = B;
         }
-
-//        else {
-//            assert(rhs == B || lhs == B);
-//        }
     }
 
 

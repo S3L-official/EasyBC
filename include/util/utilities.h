@@ -26,10 +26,8 @@ namespace utilities{
 
     bool sub_prec_ck(std::vector<std::string> us, std::vector<std::string> sub);
 
-    // used to transfer string form vectors to int form
     std::vector<int> sv_to_iv(std::vector<std::string> tt);
 
-    // used to transfer int form vectors to string form
     std::vector<std::string> iv_to_sv(std::vector<int> tt);
 
     int weight(std::string a);

@@ -8,13 +8,8 @@
 #include <unordered_map>
 #include "vector"
 
-
-// CHANGE HERE to set the size of initial (im)possible patterns of Sbox
 #define SBOX_LENGTH 16
-// CHANGE HERE to set your number of threads for S-box modeling inequalities check
 #define CK_THD 16
-// CHANGE HERE to set the timer of Z3 solver (unit : second)
-#define TIMER 120
 
 #define DPATH "../data/"
 
@@ -160,4 +155,51 @@ namespace setup{
     static std::string CIPHERS6[] = {"APN_6", "Fides_6", "SC2000_6"};
 
     static std::string CIPHERS8[] = {"AES", "SKINNY_8"};
+
+    static std::unordered_map<std::string, std::string> cryptPrimitiveMap
+            {{"AES","AES"}, {"DES", "DES"}, {"GIFT-64", "GIFT_64"}, {"KLEIN", "KLEIN2"},
+             {"LBlock", "LBlock"}, {"MIBS", "MIBS1"}, {"Piccolo", "Piccolo"},
+             {"PRESENT", "PRESENT"}, {"Rectangle", "Rectangle"},
+             {"SIMON32", "SIMON32"}, {"SIMON48", "SIMON48"}, {"SIMON64", "SIMON"},
+             {"SKINNY-64", "SKINNY_64tn"}, {"TWINE", "TWINE"},
+             {"ASCON", "ASCON"}, {"Elephant", "Elephant_Dumbo"}, {"GIFT-COFB", "GIFT-COFB"},
+             {"GRAIN", "grain128aead_enc"}, {"ISAP", "ISAP-KECCAK-p"}, {"Photon", "PHOTON-Beetle"},
+             {"Romulus", "Romulus"}, {"SPARKLE", "SPARKLE"},
+             {"TinyJAMBU", "TinyJAMBU"}, {"Xoodyak", "Xoodyak"}};
+
+    static std::unordered_map<std::string, std::string> cryptPrimitiveSetMap
+            {{"AES","WordWise"}, {"DES", "BlockCipher"}, {"GIFT-64", "BlockCipher"},
+             {"KLEIN", "WordWise"},
+             {"LBlock", "WordWise"}, {"MIBS", "WordWise"}, {"Piccolo", "WordWise"},
+             {"PRESENT", "BlockCipher"}, {"Rectangle", "BlockCipher"},
+             {"SIMON32", "BlockCipher"}, {"SIMON48", "BlockCipher"}, {"SIMON64", "BlockCipher"},
+             {"SKINNY-64", "BlockCipher"}, {"TWINE", "WordWise"},
+             {"ASCON", "NIST"}, {"Elephant", "NIST"}, {"GIFT-COFB", "NIST"},
+             {"GRAIN", "NIST"}, {"ISAP", "NIST"}, {"Photon", "WordWise"},
+             {"Romulus", "NIST"}, {"SPARKLE", "NIST"},
+             {"TinyJAMBU", "NIST"}, {"Xoodyak", "NIST"}};
+
+    static std::unordered_map<std::string, std::string> cryptPrimitiveSetMapSup
+            {{"AES","w"}, {"DES", "b"}, {"GIFT-64", "b"},
+             {"KLEIN", "w"},
+             {"LBlock", "w"}, {"MIBS", "w"}, {"Piccolo", "w"},
+             {"PRESENT", "b"}, {"Rectangle", "b"},
+             {"SIMON32", "d"}, {"SIMON48", "d"}, {"SIMON64", "d"},
+             {"SKINNY-64", "b"}, {"TWINE", "w"},
+             {"ASCON", "b"}, {"Elephant", "b"}, {"GIFT-COFB", "d"},
+             {"GRAIN", "n"}, {"ISAP", "d"}, {"Photon", "w"},
+             {"Romulus", "b"}, {"SPARKLE", "d"},
+             {"TinyJAMBU", "d"}, {"Xoodyak", "d"}};
+
+static std::unordered_map<std::string, std::string> cryptPrimitiveInterMap
+        {{"AES","BlockCipher"}, {"DES", "BlockCipher"}, {"GIFT-64", "BlockCipher"},
+         {"KLEIN", "BlockCipher"},
+         {"LBlock", "BlockCipher"}, {"MIBS", "BlockCipher"}, {"Piccolo", "BlockCipher"},
+         {"PRESENT", "BlockCipher"}, {"Rectangle", "BlockCipher"},
+         {"SIMON32", "BlockCipher"}, {"SIMON48", "BlockCipher"}, {"SIMON64", "BlockCipher"},
+         {"SKINNY-64", "BlockCipher"}, {"TWINE", "BlockCipher"},
+         {"ASCON", "NIST"}, {"Elephant", "NIST"}, {"GIFT-COFB", "NIST"},
+         {"GRAIN", "NIST"}, {"ISAP", "NIST"}, {"Photon", "NIST"},
+         {"Romulus", "NIST"}, {"SPARKLE", "NIST"},
+         {"TinyJAMBU", "NIST"}, {"Xoodyak", "NIST"}};
 }

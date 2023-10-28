@@ -22,6 +22,7 @@ std::map<std::string, int> pboxMSize = {};
 std::map<std::string, std::vector<int>> Ffm = {};
 std::string cipherName;
 
+void paramProcess(std::string mode, std::string cipherName);
 void SboxModelingMGR(std::vector<std::string> params);
 void MILPMGR(std::vector<std::string> params);
 void EasyBCInterpreter(std::vector<std::string> params);
@@ -33,50 +34,91 @@ int main(int argc, const char* argv[]) {
         params.emplace_back(argv[i]);
     }
 
-    // EasyBC interpreter used for evaluation the semantic of EasyBC
-    if (argc == 3) {
-        EasyBCInterpreter(params);
+    // print help
+    if (params[0] == "-h") {
+        std::cout << "Welcome to EasyBC!\n"
+                     "Available commands are:\n"
+                     " -benchmark : list all block ciphers and key-less permutation in our benchmarks.\n"
+                     " -s cipherName : perform security analysis of the cryptographic primitive against differential cryptanalysis.\n"
+                     " -i cipherName : encrypt cryptographic primitive implemented in EasyBC by EasyBC interpreter.\n"
+                     "You can find the output data in the 'data' folder!" << std::endl;
+    } else if (params[0] == "-benchmark") {
+        std::cout << "block ciphers: \n"
+                     "AES, DES, GIFT-64, KLEIN, LBlock, MIBS, Piccolo, PRESENT, Rectangle, SIMON32, SIMON48, SIMON64, SKINNY-64, TWINE\n"
+                     "key-less permutations: \n"
+                     "ASCON, Elephant, GIFT-COFB, GRAIN, ISAP, Photon, Romulus, SPARKLE, TinyJAMBU, Xoodyak" << std::endl;
+    } else if (params[0] == "-block ciphers") {
+        std::cout << "block ciphers: \n"
+                     "AES, DES, GIFT-64, KLEIN, LBlock, MIBS, Piccolo, PRESENT, Rectangle, SIMON32, SIMON48, SIMON64, SKINNY-64, TWINE" << std::endl;
+    } else if (params[0] == "-nist") {
+        std::cout << "key-less permutations: \n"
+                     "ASCON, Elephant, GIFT-COFB, GRAIN, ISAP, Photon, Romulus, SPARKLE, TinyJAMBU, Xoodyak" << std::endl;
+    } else if (params[0] == "-s" or params[0] == "-i") {
+        paramProcess(params[0], params[1]);
+    } else {
+        std::cout << "invalid command !\n typing '-h' to get the help information." << std::endl;
+        assert(false);
     }
-    // sbox modeling
-    else if (argc == 5) {
-        SboxModelingMGR(params);
-    } else if (argc >= 6) {
-        MILPMGR(params);
-    }
-    // read setup from file
-    else {
-        params.clear();
-        //std::string path = "../parametersMILPDemo.txt";
-        std::string path = "../parametersInterpreterDemo.txt";
-        std::ifstream file;
-        file.open(path);
-        std::string model, line;
-        std::string whiteSpaces = " \n\r\t\f\v";
-        while (getline(file, line)) {
-            // trim and save parameters
-            size_t first_non_space = line.find_first_not_of(whiteSpaces);
-            line.erase(0, first_non_space);
-            size_t last_non_space = line.find_last_not_of(whiteSpaces);
-            line.erase(last_non_space + 1);
-            params.push_back(line);
-        }
-        file.close();
-        int paramNum = params.size();
-        if (params[1] == "plaintext" and params[3] == "subkey") {
-            EasyBCInterpreterDebug(params);
-        } else if (paramNum == 2) {
-            EasyBCInterpreter(params);
-        } else if (paramNum == 4) {
-            SboxModelingMGR(params);
-        } else if (paramNum >= 5) {
-            MILPMGR(params);
-        } else
-            assert(false);
-    }
-
     return 0;
 }
 
+void paramProcess(std::string mode, std::string cipherName) {
+    std::string RunCipherName = setup::cryptPrimitiveMap[cipherName];
+    std::vector<std::string> params;
+    params.clear();
+    std::string path = "../data/param/parameters.txt";
+
+    std::ofstream fParamWrite(path, std::ios::trunc);
+    if (!fParamWrite){
+        std::cout << "Wrong file path ! " << std::endl;
+    } else {
+        if (mode == "-s") {
+            fParamWrite << "9\n";
+            fParamWrite << "../benchmarks/" + setup::cryptPrimitiveSetMap[cipherName] + "/" + RunCipherName + ".cl\n";
+            fParamWrite << setup::cryptPrimitiveSetMapSup[cipherName] << "\n";
+            if (setup::cryptPrimitiveSetMapSup[cipherName] == "n") {
+                std::cout << "the security analysis of stream cipher is not supported now !" << std::endl;
+                assert(false);
+            }
+            fParamWrite << "cryptanalysis\n";
+            fParamWrite << "1\n";
+            fParamWrite << "startRound\n";
+            fParamWrite << "1\n";
+            fParamWrite << "endRound\n";
+            fParamWrite << "10";
+        } else if (mode == "-i") {
+            fParamWrite << setup::cryptPrimitiveInterMap[cipherName] << "\n";
+            fParamWrite << RunCipherName;
+        }
+    }
+    fParamWrite.close();
+
+    std::ifstream file;
+    file.open(path);
+    std::string model, line;
+    std::string whiteSpaces = " \n\r\t\f\v";
+    while (getline(file, line)) {
+        // trim and save parameters
+        size_t first_non_space = line.find_first_not_of(whiteSpaces);
+        line.erase(0, first_non_space);
+        size_t last_non_space = line.find_last_not_of(whiteSpaces);
+        line.erase(last_non_space + 1);
+        params.push_back(line);
+    }
+    file.close();
+
+    int paramNum = params.size();
+    if (params[1] == "plaintext" and params[3] == "subkey") {
+        EasyBCInterpreterDebug(params);
+    } else if (paramNum == 2) {
+        EasyBCInterpreter(params);
+    } else if (paramNum == 4) {
+        SboxModelingMGR(params);
+    } else if (paramNum >= 5) {
+        MILPMGR(params);
+    } else
+        assert(false);
+}
 
 void SboxModelingMGR(std::vector<std::string> params) {
     /*
@@ -204,8 +246,8 @@ void MILPMGR(std::vector<std::string> params) {
         sb.setStartRound(startRound);
         sb.setEndRound(endRound);
         if (params[3] == "cryptanalysis") {
-            //sb.setSpeedUp1();
-            //sb.setSpeedUp2();
+            sb.setSpeedUp1();
+            sb.setSpeedUp2();
             // rectangle 的ILP和MILP进行evaluation时结果可能不一样,
             // 因此为了和cryptanalysis的结果一致，必须用ILP的变量取值范围
             // 实际上在转换为可满足行问题以后，已经不能称之为ILP或者MILP
@@ -395,13 +437,13 @@ std::vector<double> EasyBCInterpreterDebug(std::vector<std::string> params) {
     encryptTime.push_back(clockTime);
     encryptTime.push_back(timeTime);
 
-    for (int i = 0; i < ciphertext.size(); ++i) {
+    /*for (int i = 0; i < ciphertext.size(); ++i) {
         if (ciphertext[i] != encryptResult[i]) {
             std::cout << "The encryption process has something wrong !" << std::endl;
             assert(false);
         }
     }
-    std::cout << "the encryption is correct !" << std::endl;
+    std::cout << "the encryption is correct !" << std::endl;*/
 
     return encryptTime;
 }

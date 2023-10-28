@@ -5,9 +5,9 @@ sbox uint6[32] s = {4,11,31,20,26,21,9,2,27,5,8,18,29,3,6,28,30,19,7,14,0,13,17,
 uint8[12] rc = {240,225,210,195,180,165,150,135,120,105,90,75};
 
 r_fn uint1[320] round_function(uint8 r, uint1[32] key, uint1[320] input) {
-    #for (i from 0 to 7) {
-    #    input[184 + i] = input[184 + i] ^ rc[r - 1][7 - i];
-    #}
+    for (i from 0 to 7) {
+        input[184 + i] = input[184 + i] ^ rc[r - 1][7 - i];
+    }
 
     uint1[320] s_out;
     for (i from 0 to 63) {

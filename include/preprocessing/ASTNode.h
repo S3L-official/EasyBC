@@ -20,11 +20,10 @@ class Interpreter;
 class Value;
 typedef std::shared_ptr<Value> ValuePtr;
 typedef std::shared_ptr<ThreeAddressNode> ThreeAddressNodePtr;
-typedef std::weak_ptr<ThreeAddressNode> ThreeAddressNodeWeakPtr; // ThreeAddressNode 的 parents
+typedef std::weak_ptr<ThreeAddressNode> ThreeAddressNodeWeakPtr;
 
 namespace ASTNode {
     enum Operator {
-        // operators of syntax
         ADD,
         MINUS,
         FFTIMES,
@@ -33,23 +32,21 @@ namespace ASTNode {
         AND,
         OR,
         XOR,
-
-        // 下面的运算符等到需要时再慢慢调整
         LSH,
         RSH,
         RLSH,
         RRSH,
         NOT,
 
-        NEWINDEX, // 用以分割多个index访问
-        BOXOP, // 用以表示box permutation，如 sbox<sbox_in>, pbox<pbox_in>
-        SYMBOLINDEX, // 当某个数组变量的每个元素都是symbol的时候，且该数组是由NVariavleDeclaration声明时，用于连接symbol表示的元素和索引index
-        TOUINT, // 用于连接数组a和标识符b，将数组的所有元素转化成一个整数c，该整数c的标识符也是b
-        CALL, // 函数调用，三地址转换时使用
-        NULLOP, // 用于表示没有任何操作
+        NEWINDEX,
+        BOXOP,
+        SYMBOLINDEX,
+        TOUINT,
+        CALL,
+        NULLOP,
         PUSH,
         INDEX,
-        BOXINDEX, // 转换三地址时，BOXOP直接操作的数组中的各个元素需要用BOXINDEX来连接起来
+        BOXINDEX,
     };
 
 
@@ -75,7 +72,6 @@ namespace ASTNode {
         virtual std::string getTypeName() const = 0;
         virtual Json::Value jsonGen() const { return Json::Value();}
 
-        // 将ASTNode转化成Value
         virtual ValuePtr compute(Interpreter& interpreter) {return nullptr;}
 
         int transType2Int(Type type) {
@@ -398,7 +394,6 @@ namespace ASTNode {
     };
 
 
-    // 该类用于分析 sbox进行的substitution和pbox进行的linear transformation
     class NBoxOperation : public NExpression {
     private:
         NIdentifierPtr boxname;

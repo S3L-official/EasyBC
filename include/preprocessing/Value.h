@@ -28,8 +28,6 @@ enum ValueType {
     VTArrayValueIndex
 };
 
-
-// 这里我声明了一个Value父类，在其中没有声明一个pure virtual函数，意味着我允许他们在没有实现的，可以继承default实现
 class Value {
 private:
     std::vector<ValuePtr> parents;
@@ -85,7 +83,6 @@ public:
     }
 
     virtual void replaceChild(ValuePtr v1, ValuePtr v2){
-        std::cout << "no implementation" << std::endl;
         assert(false);
     }
 
@@ -119,8 +116,6 @@ public:
 typedef std::shared_ptr<Value> ValuePtr;
 
 
-// 下面两个类是运算类型的value，可以通过value_of函数来evaluate表达式的具体值，
-// 但是easybc还支持其他语法糖的操作，比如View和touint，这个在实际分析时我们并不对其进行直接计算，而是以symbol_value的方式保存实例对象。
 class InternalBinValue : public Value {
 private:
     ValuePtr left;
@@ -151,15 +146,12 @@ public:
             return left->toString() + " >>> " + right->toString();
         else if(op == ASTNode::Operator::MINUS)
             return left->toString() + " - " + right->toString();
-            // 这里我们添加两个操作 mod 和 divide，之前是没有的
         else if(op == ASTNode::Operator::MOD)
             return left->toString() + " % " + right->toString();
         else if(op == ASTNode::Operator::DIVIDE)
             return left->toString() + " / " + right->toString();
-            // 新增boxop
         else if (op == ASTNode::Operator::BOXOP)
             return left->toString() + " boxop " + right->toString();
-            // 新增symbolindex
         else if (op == ASTNode::Operator::SYMBOLINDEX)
             return left->toString() + " symbolindex " + right->toString();
         else {
@@ -187,7 +179,6 @@ public:
             return lvalue << rvalue;
         } else if(this->getOp() == ASTNode::Operator::RSH){
             return lvalue >> rvalue;
-            // 新增的循环移位,这里还需要专门实现函数来实现<<<和>>>操作
         } else if(this->getOp() == ASTNode::Operator::RLSH){
             return lvalue << rvalue;
         } else if(this->getOp() == ASTNode::Operator::RRSH){
@@ -218,7 +209,6 @@ public:
         }
     }
 
-    // 对bin来说，参数是remove哪个child
     virtual void removeChild(ValuePtr child) override {
         std::vector<ValuePtr>& childParents = child->getParents();
         auto it = childParents.begin();
@@ -232,7 +222,6 @@ public:
         }
     }
 
-    // 这是这个类自己的函数
     ValuePtr removeAnotherChild(ValuePtr child) {
         if(left == child) {
             removeChild(right);
@@ -301,7 +290,6 @@ public:
     }
 
     virtual void removeChild(ValuePtr child) override {
-        // 左孩子是random，那么就remove右孩子
         std::vector<ValuePtr>& childParents = rand->getParents();
         auto it = childParents.begin();
         while(it != childParents.end()) {
@@ -385,11 +373,6 @@ public:
 
 typedef std::shared_ptr<ArrayValue> ArrayValuePtr;
 
-
-// 该类型用于表示四种box：sbox，pbox，pboxm，ffm
-// 其中，成员变量rowSize表示box每行的size，
-// 即，当sbox或pbox时，rowSize等于sbox或pbox的size；
-// 当pboxm或ffm时，rowSize等于每行subvector的size
 class BoxValue : public Value {
 private:
     std::string boxType;
@@ -466,7 +449,6 @@ private:
     ValuePtr returns;
     std::vector<std::set<ValuePtr>> domOfReturn;
 
-    // 下面三个成员变量用以标识函数的类型
     bool isRndf = false;
     bool isKschd = false;
     bool isFn = false;
@@ -520,7 +502,6 @@ public:
         for(const auto& ele : block) {
             if(ele != nullptr) {
                 result += ele->toString() + "\n";
-                // cout << ele->toString() << endl;
             } else {
                 result += "NULL\n";
             }
@@ -707,13 +688,6 @@ public:
     virtual std::string toString() override {
         std::string res = "";
         res += procedurePtr->getProcName() + "(";
-//        for(int i = 0; i < arguments.size(); i++) {
-//            if(i == 0) {
-//                res += arguments[i]->toString();
-//            } else {
-//                res += ", " + arguments[i]->toString();
-//            }
-//        }
         res += "arguments";
         res += ")";
         std::string callsites;
@@ -739,12 +713,10 @@ public:
     virtual void replaceChild(ValuePtr v1, ValuePtr v2) override{
         bool flag = false;
         for(int i = 0; i < arguments.size(); i++) {
-            // 如果第i个实际参数是v1，就换成v2
             if(arguments[i] == v1) {
                 arguments[i] = v2;
                 flag = true;
             }
-            // 如果第i个实际参数已经替换为了v2,就不用替换
             if(arguments[i] == v2) {
                 flag = true;
             }
@@ -772,7 +744,6 @@ public:
         }
     }
 
-    //对于函数调用， remove的是本身
     virtual void removeChild(ValuePtr child) override {
         ValuePtr returnNode = nullptr;
         std::vector<ValuePtr>& childParents = child->getParents();

@@ -11,23 +11,20 @@
 #include "fstream"
 #include "util/utilities.h"
 
-/*
- * Syntax-guided synthesize
- * */
 class SGsyn {
 private:
     z3::context context;
     z3::solver solver;
 
-    z3::expr_vector xb; // 未知数变量和绑定未知数的bool变量
+    z3::expr_vector xb;
     z3::expr_vector target_coeff;
-    z3::expr pre_con; // 前置约束
-    std::vector<std::vector<int>> crr_ineq; // 目前求解结果
-    int dim; // 不带常数维度，如4bit sbox 维度为8
-    int target_num; // 目标数目
+    z3::expr pre_con;
+    std::vector<std::vector<int>> crr_ineq;
+    int dim;
+    int target_num;
     int timer = 120;
-    std::string round_results; // sat or unsat
-    int mode = 2; // 1 for dichotomization  2 for loops by minus 1
+    std::string round_results;
+    int mode = 2;
 
     int solveTime;
 
@@ -48,14 +45,6 @@ public:
     void init() {
         for (int i = 1; i < dim + 1; i++)
             xb.push_back(context.int_const(("x" + std::to_string(i)).c_str()));
-            //xb.push_back(context.bv_const(("x" + std::to_string(i)).c_str(),15));
-
-        /*for (int i = dim + 1; i < dim * 2 + 1; i++)
-            xb.push_back(context.bool_const(("b" + std::to_string(i - dim)).c_str()))*/;
-
-        /*pre_con = (xb[0] == 1 && xb[dim]) || (xb[0] == 0 && !(xb[dim]));
-        for (int i = 1; i < dim; i++)
-            pre_con = pre_con and ( (xb[i] == 1 && xb[dim + i]) || (xb[i] == 0 && !(xb[dim + i])));*/
 
         pre_con = (xb[0] <= 1 && xb[0] >= 0);
         for (int i = 1; i < dim; i++)
@@ -65,11 +54,7 @@ public:
         for (int j = 0; j < target_num; j++)
             for (int i = 0; i < dim + 1; i++)
                 target_coeff.push_back(context.int_const(("c" + std::to_string((j + 1) * 100 + (i + 1))).c_str()));
-        /*for (int j = 0; j < target_num; j++)
-            for (int i = 0; i < dim + 1; i++)
-                target_coeff.push_back(context.bv_const(("c" + std::to_string((j + 1) * 100 + (i + 1))).c_str(), 15));*/
 
-        // target_input
         z3::expr targetInput(context);
         for (int i = 0; i < crr_ineq.size(); i++){
             z3::expr tExpr(context);
@@ -80,7 +65,6 @@ public:
             else targetInput = targetInput and tExpr;
         }
 
-        // target_merge
         z3::expr targetMerge(context);
         for (int j = 0; j < target_num; j++){
             z3::expr target_inq(context);
@@ -133,7 +117,6 @@ public:
         crr_ineq = tmpOut;
     }
 
-    // 二分法
     void dichotomySyn() {
         int lowerBound = 0, upperBound = crr_ineq.size();
         int counter = 1;

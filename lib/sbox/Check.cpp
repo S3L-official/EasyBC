@@ -46,23 +46,18 @@ void Check::check(SboxM sboxM, std::vector<std::vector<int>> ineq_int) {
     std::vector<Ineq> ineq = ineq_obt(ineq_int);
 
     int dim = ineq[0].get_dim();
-    // the points in ineqalities' solution set
     int *sol = new int[1 << dim];
     int *tmp = new int[1 << dim];
-    // bsol[i] == 1 stands for 'i' is in sol
     bool *bsol = new bool[1 << dim];
     bool *bref = new bool[1 << dim];
 
-    // init bool for ref
     for (int i = 0; i < (1 << dim); i++) bref[i] = false;
     for (int i = 0; i < ref_ans.size(); i++) bref[ref_ans[i]] = true;
 
-    // init bool for solution
     for (int i = 0; i < (1 << dim); i++) sol[i] = i, bsol[i] = true;
     int sol_sz = (1 << dim);
     int tmp_sz = 0;
 
-    // init lock for bsol
     omp_lock_t *lock = new omp_lock_t[1 << dim];
     for (int i = 0; i < (1 << dim); i++)
         omp_init_lock(&lock[i]);
@@ -100,7 +95,6 @@ void Check::check(SboxM sboxM, std::vector<std::vector<int>> ineq_int) {
         sol_sz = tmp_sz;
     }
 
-    // final bool for solution
     for (int i = 0; i < sol_sz; i++)
         bsol[sol[i]] = true;
 

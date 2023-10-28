@@ -18,14 +18,12 @@ DiffSWMILP::DiffSWMILP(const vector<ProcedureHPtr> &procedureHs, std::string tar
 }
 
 void DiffSWMILP::MGR() {
-    // initial the information of all boxes
     preprocess(pboxM, Ffm);
 
     this->finalResults.clear();
     this->finalClockTime.clear();
     this->finalTimeTime.clear();
 
-    // Initial directories
     this->pathPrefix += target + "/";
     this->modelPath = this->pathPrefix + "models/" + this->pathSuffix;
     this->resultsPath = this->pathPrefix + "results/" + this->pathSuffix;
@@ -37,18 +35,15 @@ void DiffSWMILP::MGR() {
     system(("touch " + this->finalResultsPath).c_str());
 
     for (int i = this->startRound; i <= endRound; ++i) {
-        // 如果证明block cipher是安全的，就停止, 只有在target == "evaluation" 时，才可以被改变
         if (this->securityFlag)
             break;
 
         this->currentRound = i;
         std::cout << "\n **************** CURRENT MAX ROUOND : " << this->currentRound << "  **************** \n" << std::endl;
-        // Initial path
         this->modelPath = this->pathPrefix + "models/" + this->pathSuffix + std::to_string(this->currentRound) + "_round_model.lp";
         this->resultsPath = this->pathPrefix + "results/" + this->pathSuffix + std::to_string(this->currentRound) + "_round_results.txt";
         system(("touch " + this->modelPath).c_str());
         system(("touch " + this->resultsPath).c_str());
-        // Differential characteristic path
         this->diffCharacteristicPath = this->pathPrefix + "differentialCharacteristics/" + this->pathSuffix + std::to_string(this->currentRound) + "_round_differential_characteristic.txt";
         system(("touch " + this->diffCharacteristicPath).c_str());
 
@@ -60,11 +55,6 @@ void DiffSWMILP::MGR() {
         else
             assert(false);
 
-        /*
-         * 因为我们用sat问题求解进行evaluation时，会有很多不可解的模型，产生很多不必要的时间开销，
-         * 因此我们需要也统计一下，每轮的所有时间，即不可解模型的求解时间也加上。
-         * */
-        // 下面两个时间也记录不可解模型的求解时间
         vector<double> finalTotalRoundClockTime;
         vector<double> finalTotalRoundTimeTime;
         clock_t startTime, endTime;
@@ -79,7 +69,6 @@ void DiffSWMILP::MGR() {
         finalTotalRoundClockTime.push_back(clockTime);
         finalTotalRoundTimeTime.push_back(timeTime);
 
-        // initial for next round
         this->tanNameMxIndex.clear();
         this->rtnMxIndex.clear();
         this->rtnIdxSave.clear();
@@ -89,7 +78,6 @@ void DiffSWMILP::MGR() {
         this->roundSboxIndexSave.clear();
         this->sboxFindFlag = false;
         this->sboxIndexSave.clear();
-        // save the current final results
         std::ofstream fResults(this->finalResultsPath, std::ios::trunc);
         if (!fResults){
             std::cout << "Wrong file path ! " << std::endl;
@@ -134,7 +122,6 @@ void DiffSWMILP::MGR() {
             fResults.close();
         }
     }
-    // print final results
     if (target == "cryptanalysis") {
         std::cout << "\n ***************** FINAL RESULTS ***************** " << std::endl;
         for (int i = 0; i < this->finalResults.size(); ++i) {
@@ -153,7 +140,6 @@ void DiffSWMILP::MGR() {
                 std::cout << "****************************************************************\n\n\n" << std::endl;
 
                 std::cout << "Results Of " << i + 1 << " Rounds : " << std::endl;
-                // std::cout << "\tnumber of active sboxes for security bounding : " << this->finalResults[i] << std::endl;
                 std::cout << "\tnumber of target active sboxes for security bounding : " << this->targetNdiff << "\n";
                 std::cout << "\tclockTime : " << this->finalClockTime[i] << std::endl;
                 std::cout << "\ttimeTime : " << this->finalTimeTime[i] << std::endl << std::endl;
@@ -192,8 +178,6 @@ void DiffSWMILP::cryptanalysis() {
             }
             target << "\n" << "Subject To\n";
 
-            // speedup constraints
-            // 每轮的input difference 累加和都要大于0
             if (this->speedup1) {
                 for (int j = 0; j < this->differentialCharacteristic.size() - 1; ++j) {
                     for (int k = 0; k < this->differentialCharacteristic[j].size(); ++k) {
@@ -285,8 +269,6 @@ void DiffSWMILP::evaluation() {
             }
             target << " <= " << this->targetNdiff << "\n";
 
-            // speedup constraints
-            // 每轮的input difference 累加和都要大于0
             if (this->speedup1) {
                 for (int j = 0; j < this->differentialCharacteristic.size() - 1; ++j) {
                     for (int k = 0; k < this->differentialCharacteristic[j].size(); ++k) {
@@ -358,8 +340,6 @@ void DiffSWMILP::solver() {
     GRBEnv env = GRBEnv(true);
     env.start();
 
-    // 不是比较测试时不设置线程数
-    // LBlock比较时没有设置线程数，其他block cipger比较时再设置
     env.set(GRB_IntParam_Threads, this->gurobiThreads);
     env.set(GRB_IntParam_MIPFocus, 3);
     env.start();
@@ -385,8 +365,6 @@ void DiffSWMILP::solver() {
             f << "clock time : " << clockTime << "s\n";
             f << "time time : " << timeTime << "s\n";
 
-            // Obtaining the specific values of variables
-            // all variable and results mapping
             map<std::string, int> dcVarMaps;
             GRBVar *a = model.getVars();
             int varNum = model.get(GRB_IntAttr_NumVars);
@@ -396,7 +374,6 @@ void DiffSWMILP::solver() {
             }
             f.close();
 
-            // save differential characteristic
             std::ofstream dcs(this->diffCharacteristicPath, std::ios::trunc);
             if (!dcs){
                 std::cout << "Wrong file path ! " << std::endl;
@@ -434,8 +411,6 @@ void DiffSWMILP::solver() {
             f << "clock time : " << clockTime << "s\n";
             f << "time time : " << timeTime << "s\n";
 
-            // Obtaining the specific values of variables
-            // all variable and results mapping
             map<std::string, int> dcVarMaps;
             GRBVar *a = model.getVars();
             int varNum = model.get(GRB_IntAttr_NumVars);
@@ -445,7 +420,6 @@ void DiffSWMILP::solver() {
             }
             f.close();
 
-            // save differential characteristic
             std::ofstream dcs(this->diffCharacteristicPath, std::ios::trunc);
             if (!dcs){
                 std::cout << "Wrong file path ! " << std::endl;
@@ -476,10 +450,6 @@ void DiffSWMILP::solver() {
             this->finalTimeTime.push_back(timeTime);
         }
         else if (optimstatus == 3) {
-            // 如果模型不可满足，说明无法找到小于等于数量为targetNdiff的differential characteristic，
-            // 即说明任意的differential characteristic的active sbox数量至少大于targetNdiff，
-            // 或者无法找到小于等于某个数（对应于概率的上界），即最大差分概率的上界在某个值时，最大差分概率依然小于等于2^{-k},
-            // 亦即block cipher是足够安全的
             this->securityFlag = true;
             this->securityRoundNumBound = this->currentRound;
             std::cout << "\n\n\n****************************************************************" << std::endl;
@@ -498,22 +468,6 @@ void DiffSWMILP::solver() {
             f << "clock time : " << clockTime << "s\n";
             f << "time time : " << timeTime << "s\n";
             f.close();
-
-            // 如果在模型不可解时，需要继续求解，并且找出对应轮数下的最少活跃active数量，就是用下面注释的代码
-            /*if (this->cipherName == "GIFT_128" or this->cipherName == "GIFT_64")
-                this->targetNdiffOrPr += 200;
-            else
-                this->targetNdiffOrPr++;
-            std::ofstream target(this->modelPath, std::ios::trunc);
-            if (!target) {
-                std::cout << "Wrong file path ! " << std::endl;
-            } else {
-                target << this->satTargetObj.substr(0, this->satTargetObj.size() - 1);
-                target << " = " << targetNdiffOrPr << "\n";
-                target << this->satModel;
-                target.close();
-            }
-            solver();*/
         }
         else
             std::cout << "optimstatus : " << optimstatus << std::endl;
@@ -581,7 +535,6 @@ void DiffSWMILP::programGenModel() {
 
 void DiffSWMILP::roundFunctionGenModel(const ProcedureHPtr &procedureH) {
     std::string keyId = procedureH->getParameters().at(1).at(0)->getNodeName().substr(0, procedureH->getParameters().at(1).at(0)->getNodeName().find("0"));
-    // return 可能包含 parameter，因此确定wordSize需要找一个非parameter的三地址实例
     for (const auto & i : procedureH->getReturns()) {
         if (i->getNodeType() != NodeType::PARAMETER) {
             this->wordSize = Transformer::getNodeTypeSize(i->getNodeType());
@@ -601,7 +554,6 @@ void DiffSWMILP::roundFunctionGenModel(const ProcedureHPtr &procedureH) {
             this->tanNameMxIndex[i->getNodeName()] = this->ACounter;
             this->ACounter++;
         }
-        // initial input difference
         std::vector<int> inputC;
         for (int i = 1; i < this->ACounter; ++i) {
             inputC.push_back(i);
@@ -735,7 +687,6 @@ void DiffSWMILP::roundFunctionGenModel(const ProcedureHPtr &procedureH) {
         }
     }
 
-    // output difference
     std::vector<int> outputC;
     for (int & i : this->rtnIdxSave) {
         outputC.push_back(i);
@@ -821,8 +772,6 @@ void DiffSWMILP::PboxGenModel(const ThreeAddressNodePtr &pbox, const ThreeAddres
     for (int i = 0; i < pboxValue.size(); ++i)
         outputIdx.push_back(0);
     for (int i = 0; i < pboxValue.size(); ++i)
-        //outputIdx[pboxValue.size() - 1 - pboxValue[pboxValue.size() - 1 - i]] = inputIdx[i];
-        //outputIdx[pboxValue[i]] = inputIdx[i];
         outputIdx[i] = inputIdx[pboxValue[i]];
     for (int i = 0; i < outputIdx.size(); ++i)
         this->tanNameMxIndex[output->getNodeName() + "_$B$_" + std::to_string(i)] = outputIdx[i];

@@ -26,7 +26,6 @@ void Red::rtn_save(SboxM sboxM, const std::vector<std::vector<int>> &rtn, double
     fs.close();
     std::cout << "Total num of " + alg + "'s results : " << rtn.size() << std::endl;
     std::cout << "Reduction time : " << time << "s" << std::endl << std::endl;
-    // save the information of reduction process
     std::ofstream stat_s;
     stat_s.open(rtn_stat, std::ios::app);
     stat_s << alg + " : " << std::endl;
@@ -42,11 +41,9 @@ std::vector<std::vector<int>> Red::greedy_sun(SboxM sboxM, std::vector<std::vect
     int dim = ineqs[0].get_dim();
     time_t startTime, endTime;
     time(&startTime);
-    // init bool for solution
     bool bref[int(pow(2, dim))];
     for (int i = 0; i < int(pow(2, dim)); ++i) bref[i] = false;
     for (int ref_an : ref_ans) bref[ref_an] = true;
-    // iteration and greedy
     int po_n = ref_ans.size();
     while (true){
         int counter = 0;
@@ -55,7 +52,6 @@ std::vector<std::vector<int>> Red::greedy_sun(SboxM sboxM, std::vector<std::vect
             std::vector<int> rm;
             int it = 0;
             for (int & ref_an : ref_ans)
-                // ref_ans[j] does not satisfy ineq[i]
                 if (bref[ref_an] and !i(ref_an)){
                     rm.push_back(ref_an);
                     it++;
@@ -69,10 +65,8 @@ std::vector<std::vector<int>> Red::greedy_sun(SboxM sboxM, std::vector<std::vect
         }
         rtn.push_back(ineq);
         po_n -= counter;
-        /*if (po_n <= 0) break;*/
         for (int i : re) bref[i] = false;
         for (auto & i : ineqs) i.reset_mv_points();
-        // replace the if statement which judge "po_n <= 0"
         int yy = 0;
         for (int i = 0; i < int(pow(2, dim)); ++i) if (bref[i] == 0) yy ++;
         if (yy == int(pow(2, dim))) break;
@@ -94,20 +88,17 @@ std::vector<Red::ImPoint> Red::ref_impoint_init(SboxM sboxM) {
 
 std::vector<std::vector<int>> Red::milp_red(std::vector<Check::Ineq> ineqs, std::vector<ImPoint> ref_ans) {
     std::vector<std::vector<int>> rtn;
-    // initial process
     for (auto & ref_an : ref_ans)
         for (int j = 0; j < ineqs.size(); ++j)
             if (!ineqs[j](ref_an.get_d())) {
                 ref_an.rmd_add(ineqs[j]);
                 ref_an.rmd_indx_add(j);
             }
-    // Create an environment
     GRBEnv env = GRBEnv(true);
     env.start();
     GRBModel model = GRBModel(env);
     GRBVar *Elem;
     int vs = ineqs.size();
-    // Create variables
     Elem = model.addVars(vs, GRB_BINARY);
     for (int i = 0; i < vs; ++i) {
         std::ostringstream vname;
@@ -159,13 +150,11 @@ std::vector<std::vector<int>> Red::convex_hull_tech(SboxM sboxM, std::vector<std
         if (mvd_pos.find(ineq.get_mv_points()) == mvd_pos.end()) mvd_pos.insert(ineq.get_mv_points());
     }
     std::cout << "Start traversing nodes in convex hull algorithm : " << std::endl;
-    // k = 2
     std::vector<Check::Ineq> n_ineqs;
     for (int l = 0; l < ref_ans.size(); ++l) {
         for (int i = 0; i < ineqs.size(); ++i) {
             for (int j = 0; j < ineqs.size(); ++j) {
                 if (ineqs[i](ref_ans[l].get_d()) && ineqs[j](ref_ans[l].get_d()) && !ineqs[i].equal_to(ineqs[j])){
-                    // calculate the new ineq
                     std::vector<int> t1 = ineqs[i].get_cos();
                     std::vector<int> t2 = ineqs[j].get_cos();
                     std::vector<int> ma;
@@ -262,22 +251,18 @@ std::vector<std::vector<int>> Red::logic_cond(SboxM sboxM, bool ifComb233) {
     time_t startTime, endTime;
     time(&startTime);
 
-    // for all a in P : refans[i] -> a
     for (int i = 0; i < ref_ans.size(); ++i) {
-        // s_interesting
         std::vector<IcPrec> is;
         std::vector<std::vector<IcPrec>> ws;
         std::vector<std::vector<std::string>> wu;
 
         for (int j = 0; j < dim; ++j) {
-            // initial si and ui
             std::vector<IcPrec> ti;
             ws.push_back(ti);
             std::vector<std::string> ts;
             wu.push_back(ts);
         }
 
-        // fir all p in P
         for (int j = 0; j < ref_ans.size(); ++j) {
             std::string u = utilities::po_xor(ref_ans[i], ref_ans[j]);
             if (supp_intersec(supp(ref_ans[i]), supp(u))){
@@ -308,9 +293,7 @@ std::vector<std::vector<int>> Red::logic_cond(SboxM sboxM, bool ifComb233) {
             ws[1].push_back(t);
         }
 
-        // k[2, m]
         for (int j = 2; j < dim; ++j) {
-            // for all uk[i]
             for (int k = 0; k < wu[j].size(); ++k) {
                 for (int l = 0; l < wu[j - 1].size(); ++l) {
                     IcPrec t = IcPrec(ref_ans[i], wu[j - 1][l]);
@@ -408,7 +391,6 @@ std::vector<std::vector<int>> Red::distorted_balls(SboxM sboxM, bool ifComb233) 
     time_t startTime, endTime;
     time(&startTime);
 
-    // a <- impos[i]; b <- impos[j]; c <- impos[k]
     for (int i = 0; i < impos.size(); ++i) {
         for (int j = 0; j < impos.size(); ++j) {
             for (int k = 0; k < impos.size(); ++k) {
@@ -498,7 +480,6 @@ std::vector<std::vector<int>> Red::reduction(int chooser, SboxM sboxM) {
             rtn = comb233(sboxM);
             break;
         case 6: {
-            // superball
             time_t startTime, endTime;
             time(&startTime);
             superballMGR::superballGS(sboxM);
@@ -510,7 +491,6 @@ std::vector<std::vector<int>> Red::reduction(int chooser, SboxM sboxM) {
             while (getline(file, line)) {
                 std::vector<std::string> coffS = utilities::split(line, " ");
                 std::vector<int> coff;
-                // 因为superball的结果是按照逆序存储的，所以这里要特殊处理
                 for (int i = coffS.size() - 2; i >= 0; --i) {
                     coff.push_back(std::stoi(coffS[i]));
                 }
@@ -524,7 +504,6 @@ std::vector<std::vector<int>> Red::reduction(int chooser, SboxM sboxM) {
             Check::check(sboxM, rtn);
             break;
         }
-        // 这里最后应该是读取外部结果的不等式组，可以是cnf，也可以是 Udovenko 的方法
         case 7: {
             std::string path = std::string(DPATH) + "/sbox/" + sboxM.get_mode() + "/external/" +
                                std::to_string(sboxM.get_sbox_len()) + "bits/" + sboxM.get_name() + ".txt";
@@ -567,17 +546,13 @@ int Red::branch_num_of_sbox(std::vector<int> sbox) {
     return e;
 }
 
-// It seems that the branch number cannot be solved with MILP ??
-// calculate branch number of linear permutation
 int Red::branch_num_of_matrix(std::vector<std::vector<int>> m, std::vector<std::vector<int>> ffm) {
     int inputSize = m.size();
-    // Create an environment
     GRBEnv env = GRBEnv(true);
     env.start();
     GRBModel model = GRBModel(env);
     GRBVar *InputI, *OutputI;
     InputI = model.addVars(inputSize, GRB_INTEGER);
-    // 确定每个变量的上下界
     GRBLinExpr initial = 0;
     for (int i = 0; i < inputSize; ++i) {
         GRBLinExpr bound = 0;
@@ -606,7 +581,6 @@ int Red::branch_num_of_matrix(std::vector<std::vector<int>> m, std::vector<std::
 
     int optimstatus = model.get(GRB_IntAttr_Status);
     int result;
-    // GRB_OPTIMAL
     if (optimstatus == 2) {
         result = model.get(GRB_DoubleAttr_ObjVal);
         std::cout << "all results : " << std::endl;
@@ -626,7 +600,6 @@ int Red::branch_num_of_matrix(std::vector<std::vector<int>> m, std::vector<std::
 
 
 void Red::sboxModelBench(std::string name, std::vector<int> sbox, std::string target, std::string mode) {
-    // SboxM sboxM("Present", {0xC,0x5,0x6,0xB,0x9,0x0,0xA,0xD,0x3,0xE,0xF,0x8,0x4,0x7,0x1,0x2}, "D", "AS");
     SboxM sboxM(std::move(name), std::move(sbox), std::move(mode));
     Check::check(sboxM, sboxM.get_sage_ineqs());
     // test for greedy sun

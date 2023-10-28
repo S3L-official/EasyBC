@@ -24,20 +24,14 @@ private:
     std::vector<int> plaintext;
     std::vector<int> ciphertext;
     std::vector<std::vector<int>> subkeys;
-    std::map<std::string, std::vector<int>> Box;  // sbox, pbox
+    std::map<std::string, std::vector<int>> Box;
     int sboxInputSize, sboxOutputSize;
 
-    // mapping all ThreeAddressNodes in main function to their corresponding values
     std::map<std::string, int> mainTanNameMVal;
 
-    // mapping all ThreeAddressNodes in round function to their corresponding values
     std::map<std::string, int> rndTanNameMVal;
-    // mapping current round function parameters to their corresponding values
-    // params : r, sk, p
     std::map<std::string, std::vector<int>> rndParamMVal;
-    // mapping pbox name to the string concatenated from a set of permutated bits
     std::map<std::string, std::string> pboxTanNameMStr;
-    // mapping the matrix vector product ThreeAddressNode name to the corresponding result
     std::map<std::string, std::vector<int>> matVecProTanNameMStr;
 
 public:
@@ -56,7 +50,6 @@ public:
     int sboxEnc(ThreeAddressNodePtr left, ThreeAddressNodePtr right, ThreeAddressNodePtr output);
     int pboxEnc(ThreeAddressNodePtr left, ThreeAddressNodePtr right, ThreeAddressNodePtr output);
 
-    // matrix vector product encryption
     int ffTimesEnc(ThreeAddressNodePtr left, ThreeAddressNodePtr right, ThreeAddressNodePtr output);
 
     int symbolIndexEnc(ThreeAddressNodePtr left, ThreeAddressNodePtr right, ThreeAddressNodePtr output);
@@ -73,8 +66,6 @@ public:
 
     int notEnc(ThreeAddressNodePtr left, ThreeAddressNodePtr output);
 
-    // 因为des的sbox置换需要拆解输入bit序列，所以我们单独写一个函数还进行拆解。
-    // 本函数的输入是input转化为的01-字符串，输出是sbox输出值对应得index
     int desSbox(std::string inputStr) {
         int row, col;
         std::string rowStr, colStr;
@@ -117,14 +108,12 @@ public:
             ThreeAddressNodePtr left = input;
             while (left->getOp() == ASTNode::BOXINDEX) {
                 if (this->rndTanNameMVal.find(left->getLhs()->getNodeName()) == this->rndTanNameMVal.end()) {
-                    // std::cout << left->getLhs()->getOp() << std::endl;
                     if (left->getLhs()->getOp() == ASTNode::SYMBOLINDEX) {
                         this->rndTanNameMVal[left->getLhs()->getNodeName()] = symbolIndexEnc(left->getLhs()->getLhs(), left->getLhs()->getRhs(), left->getLhs());
                     } else if (left->getLhs()->getOp() == ASTNode::TOUINT) {
                         this->rndTanNameMVal[left->getLhs()->getNodeName()] = touintEnc(left->getLhs()->getLhs(), left->getLhs()->getRhs(), left->getLhs());
                     }
                     else if (left->getLhs()->getOp() == ASTNode::NULLOP) {
-                        // NULLOP 即是一个常数，对应的nodename也是常数转换的string
                         this->rndTanNameMVal[left->getLhs()->getNodeName()] = std::stoi(left->getLhs()->getNodeName());
                     } else
                         assert(false);

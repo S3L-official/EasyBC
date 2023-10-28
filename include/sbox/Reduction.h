@@ -40,7 +40,6 @@ namespace Red {
 
     std::vector<std::vector<int>> sub_milp(SboxM sboxM, std::vector<std::vector<int>> ineq_int);
 
-    // convex hull : Alg1 by Boura
     std::vector<std::vector<int>> convex_hull_tech(SboxM sboxM, std::vector<std::vector<int>> ineq_int);
 
     class IcPrec {
@@ -67,9 +66,6 @@ namespace Red {
 
     std::vector<std::string> obt_impo(SboxM sboxM, std::vector<int> ineq);
 
-    // logic condition : Alg2 by Boura
-    // the algorithm generates initial inequalities by only impossible point obtained from SboxM object,
-    // therefore, the initial input inequality group is not required
     std::vector<std::vector<int>> logic_cond(SboxM sboxM, bool ifComb233);
 
     int hamming_distance(std::string a, std::string b);
@@ -78,22 +74,18 @@ namespace Red {
 
     std::vector<int> ball_ineq(SboxM sboxM, std::string c, int d, std::vector<std::string> bq);
 
-    // distorted balls : Alg3 by Boura
     std::vector<std::vector<int>> distorted_balls(SboxM sboxM, bool ifComb233);
 
-    // Alg2 and 3 and prop 3
     std::vector<std::vector<int>> comb233(SboxM sboxM);
 
     std::vector<std::vector<int>> cnfGen(SboxM sboxM);
 
     std::vector<std::vector<int>> reduction(int chooser, SboxM sboxM);
 
-    // for calculating branch number
     int branch_num_of_sbox(std::vector<int> sbox);
 
     int branch_num_of_matrix(std::vector<std::vector<int>> m, std::vector<std::vector<int>> ffm);
 
-    // test for all reduction method and check algorithm
     void sboxModelBench(std::string name, std::vector<int> sbox, std::string target, std::string mode);
 }
 

@@ -104,10 +104,8 @@ namespace Check {
                     counter++;
             }
 
-            // mv_pos is a subset of mvd_points_
             if (counter == mv_pos.size() && mvd_points_.size() != mv_pos.size())
                 return 1;
-                // mv_pos is equal to mvd_points_
             else if (counter == mv_pos.size() && mvd_points_.size() == mv_pos.size())
                 return 2;
             else

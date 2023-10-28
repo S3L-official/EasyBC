@@ -22,11 +22,8 @@ private:
 
     int maxExtSize_ = 8;
     int timer_ = 3600 * 12;
-    int precisionBits_ = 10; // 控制概率取以2为底后的对数后的精度，现在是保留10位有效数字
+    int precisionBits_ = 10;
 
-    // 2, 4, 6, 8, 10, 12, 14, 16
-    // Take the logarithm of the probability value with base 2
-    //std::vector<float> probabilities_ = {-3, -2, -1.415, -1, -0.6781, -0.415, -0.1926, 0};
     std::vector<float> pLog2_ = {-3, -2, -1, 0};
     std::vector<std::string> c_;
     std::vector<std::vector<std::string>> p_;
@@ -72,7 +69,6 @@ public:
             }
         }
 
-        // 所有 Pij 的取值只能是 0 或 1
         for (int i = 0; i < maxExtSize_; ++i) {
             for (int j = 0; j < maxExtSize_; ++j) {
                 smtLib_ += "(assert (>= " + p_[i][j] + " 0))\n";
@@ -80,7 +76,6 @@ public:
             }
         }
 
-        // hard constraints
         for (int i = 0; i < pLog2_.size(); ++i) {
             std::string cons;
             for (int j = 0; j < maxExtSize_; ++j) {
@@ -89,12 +84,10 @@ public:
             smtLib_ += "(assert (= " + std::to_string(pLog2_[i]).substr(0, precisionBits_) + " (+ " + cons + ")) )\n";
         }
 
-        // soft constraints
         for (const auto& ci : c_) {
             smtLib_ += "(assert-soft (= " + ci + " 0) :weight 1)\n";
         }
 
-        // debug : print constructed model
         std::cout << smtLib_ << std::endl;
         solving();
     }
@@ -121,7 +114,6 @@ public:
         star_time = time(NULL);
 
         optimize_.check();
-        //std::cout << optimize_.check() << std::endl;
 
         endTime = clock();
         end_time = time(NULL);
@@ -161,14 +153,12 @@ public:
         return weighted_;
     }
 
-    // 这里返回的 encode 结果应该和 构造函数 中输入的 probabilities 是一一对应的。
     std::vector<std::string> getEncodes() {
         std::unordered_map<std::string, std::string> piAndValues;
         std::ifstream file_extract;
         file_extract.open(resultPath_);
         std::string temp;
         while (getline(file_extract, temp)) {
-            // 先提取出所有 pi 及其对应值
             std::vector<std::string> line = utilities::split(temp, " ");
             if (line[0][0] == 'p')
                 piAndValues[line[0]] = line[2];
