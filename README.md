@@ -1,5 +1,5 @@
 # EasyBC
-This repository is for parsing the input **[EasyDC]** programs of block ciphers and then performing the security analysis of block ciphers against differential cryptanalysis. It supports the following functions: 
+This repository is for parsing the input **EasyBC** programs of block ciphers and then performing the security analysis of block ciphers against differential cryptanalysis. It supports the following functions: 
 - Interpreter of EasyBC.
 - SMT-based method for determiningg branch numbers of various cryptographic operations.
 - Modeling differential propagations in S-boxes.
@@ -126,7 +126,7 @@ cd build; make
   
 
 $$
-\{b'\geq b_0, b'\geq b_1, b'\geq b_2, \sum_{i=0}^2b_i\geq 2b'\big\} 
+\{b'\geq b_0, b'\geq b_1, b'\geq b_2, \sum_{i=0}^2b_i\geq 2b'\} 
 $$
     
     is shown in the following:   
