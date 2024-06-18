@@ -35,29 +35,51 @@ int main(int argc, const char* argv[]) {
     }
 
     // print help
-    if (params[0] == "-h") {
+    if (argc > 1 and params[0] == "-h") {
         std::cout << "Welcome to EasyBC!\n"
                      "Available commands are:\n"
                      " -benchmark : list all block ciphers and key-less permutation in our benchmarks.\n"
                      " -s cipherName : perform security analysis of the cryptographic primitive against differential cryptanalysis.\n"
                      " -i cipherName : encrypt cryptographic primitive implemented in EasyBC by EasyBC interpreter.\n"
                      "You can find the output data in the 'data' folder!" << std::endl;
-    } else if (params[0] == "-benchmark") {
+    } else if (argc > 1 and params[0] == "-benchmark") {
         std::cout << "block ciphers: \n"
                      "AES, DES, GIFT-64, KLEIN, LBlock, MIBS, Piccolo, PRESENT, Rectangle, SIMON32, SIMON48, SIMON64, SKINNY-64, TWINE\n"
                      "key-less permutations: \n"
                      "ASCON, Elephant, GIFT-COFB, GRAIN, ISAP, Photon, Romulus, SPARKLE, TinyJAMBU, Xoodyak" << std::endl;
-    } else if (params[0] == "-block ciphers") {
+    } else if (argc > 1 and params[0] == "-block ciphers") {
         std::cout << "block ciphers: \n"
                      "AES, DES, GIFT-64, KLEIN, LBlock, MIBS, Piccolo, PRESENT, Rectangle, SIMON32, SIMON48, SIMON64, SKINNY-64, TWINE" << std::endl;
-    } else if (params[0] == "-nist") {
+    } else if (argc > 1 and params[0] == "-nist") {
         std::cout << "key-less permutations: \n"
                      "ASCON, Elephant, GIFT-COFB, GRAIN, ISAP, Photon, Romulus, SPARKLE, TinyJAMBU, Xoodyak" << std::endl;
-    } else if (params[0] == "-s" or params[0] == "-i") {
+    } else if (argc > 1 and (params[0] == "-s" or params[0] == "-i")) {
         paramProcess(params[0], params[1]);
     } else {
-        std::cout << "invalid command !\n typing '-h' to get the help information." << std::endl;
-        assert(false);
+        params.clear();
+        std::string path = "../parametersMILPDemo.txt";
+        std::ifstream file;
+        file.open(path);
+        std::string model, line;
+        std::string whiteSpaces = " \n\r\t\f\v";
+        while (getline(file, line)) {
+            // trim and save parameters
+            size_t first_non_space = line.find_first_not_of(whiteSpaces);
+            line.erase(0, first_non_space);
+            size_t last_non_space = line.find_last_not_of(whiteSpaces);
+            line.erase(last_non_space + 1);
+            params.push_back(line);
+        }
+        file.close();
+        int paramNum = params.size();
+        if (paramNum == 4) {
+            SboxModelingMGR(params);
+        } else if (paramNum >= 5) {
+            MILPMGR(params);
+        } else {
+            std::cout << "No input parameters !" << std::endl;
+            assert(false);
+        }
     }
     return 0;
 }
@@ -167,7 +189,6 @@ void MILPMGR(std::vector<std::string> params) {
     }
     interpreter.generateCode(*programRoot);
     res = interpreter.getProcs();
-
 
     Transformer transformer(res);
     transformer.transformProcedures();
