@@ -125,9 +125,9 @@ cd build; make
     the function of the modeling constraints 
   
 
-$$
-\{b'\geq b_0, b'\geq b_1, b'\geq b_2, \sum_{i=0}^2b_i\geq 2b'\} 
-$$
+    $$
+    \{b'\geq b_0, b'\geq b_1, b'\geq b_2, \sum_{i=0}^2b_i\geq 2b'\} 
+    $$
     
     is shown in the following:   
 
