@@ -57,7 +57,7 @@ int main(int argc, const char* argv[]) {
         paramProcess(params[0], params[1]);
     } else {
         params.clear();
-        std::string path = "../parametersMILPDemo.txt";
+        std::string path = "../parameters.txt";
         std::ifstream file;
         file.open(path);
         std::string model, line;
