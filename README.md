@@ -32,7 +32,7 @@ cd build; make
    7    (remark: number of parameters)
    ../benchmarks/BlockCipher/PRESENT.cl    (remark: path of benchmark)
    b    (remark: word-wise, bit-wise or extended bit-wise, i.e., "w", "b" or "d")
-   AS   (remark: the security analysis is by calculating minimal number of active S-boxes, or you can perform the security analysis by calculating MaxEDCP, i.e., "AS" -> "DC")
+   cryptanalysis   (remark: security analysis by calculating minimal number of active S-boxes or MaxEDCP. You can change "cryptanalysis" to "evaluation", then the corollary 5.4, corollary 5.5, corollary 7.4, corollary 7.5 will be applied)
    1    (remark: reduction method of S-boxes, the value ranges from 1 to 8, corresponding to T1 to T8 which mentioned in our paper)
    startRound    
    1
@@ -99,10 +99,10 @@ cd build; make
     7
     ../benchmarks/BlockCipher/PRESENT.cl
     b
-    AS
+    cryptanalysis
     1
-    allRounds
-    5
+    startRound  
+    1
     ```  -->
     
 - ### Adding cryptographic primitives
@@ -125,9 +125,9 @@ cd build; make
     the function of the modeling constraints 
   
 
-    $$
-    \{b'\geq b_0, b'\geq b_1, b'\geq b_2, \sum_{i=0}^2b_i\geq 2b'\} 
-    $$
+$$
+\{b'\geq b_0, b'\geq b_1, b'\geq b_2, \sum_{i=0}^2b_i\geq 2b'\big\} 
+$$
     
     is shown in the following:   
 
