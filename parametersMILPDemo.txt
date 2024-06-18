@@ -1,0 +1,9 @@
+7
+../benchmarks/BlockCipher/PRESENT.cl
+b
+cryptanalysis
+1
+startRound    
+1
+endRound
+5
