@@ -23,9 +23,9 @@ cd build; make
     ./EasyBC -h
     ```
 - ### Use the parameter file:
-    You can set the specific parameters in the parameter file *[parameters.txt](https://anonymous.4open.science/r/EasyDC-73BC/parameters.txt)* file.
+    You can set the specific parameters in the parameter file *[parameters.txt](https://github.com/S3L-official/EasyBC/blob/main/parameters.txt)* file.
     
-    *E.g.*, *[parametersMILPDemo.txt](https://anonymous.4open.science/r/EasyDC-73BC/parametersMILPDemo.txt)*
+    *E.g.*, *[parametersMILPDemo.txt](https://github.com/S3L-official/EasyBC/blob/main/parametersMILPDemo.txt)*
 
    ```
    $ cat parametersMILPDemo.txt  
